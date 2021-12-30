@@ -13,6 +13,7 @@ public class WallRun : MonoBehaviour
     private Vector3 WallNormal;
     private Vector3 lastWallNormal;
     public LayerMask wallLayer;
+    public int layer;
     
     public void Awake()
     {
@@ -21,13 +22,15 @@ public class WallRun : MonoBehaviour
 
     public void Update()
     {
+        layer = wallLayer.value;
+        
         if (playerMovement.OnWall)
         {
             Vector3 antiGravity = playerMovement.GravityDirection * -playerMovement.playerData.gravity;
             Vector3 forcePlayerIntoWall = Vector3.zero;//WallNormal * -playerMovement.playerData.gravity;
             Vector3 forwardWallVector = playerMovement.forwardWallVector;
             
-            playerMovement.rigidbody.AddForce(antiGravity + forcePlayerIntoWall + forwardWallVector, ForceMode.Force);
+            playerMovement.rigidbody.AddForce(antiGravity + forcePlayerIntoWall + forwardWallVector, ForceMode.Acceleration);
             
             if (playerMovement.jumpInput)
             {
@@ -81,11 +84,14 @@ public class WallRun : MonoBehaviour
     
     public void OnCollisionEnter(Collision other)
     {
-        StartWallRun(other.contacts[0].normal);    
-        
-        if (other.collider.gameObject.layer == 1<<wallLayer)
+        if ((wallLayer.value & 1<<other.gameObject.layer) != 0)
         {
-            
+            StartWallRun(other.contacts[0].normal);  
+        }
+        
+        if (other.collider.gameObject.layer == layer)
+        {
+              
         }
     }
 

@@ -200,9 +200,7 @@ public class PlayerMovement : MonoBehaviour
             {
                 Landed();
             }
-            
-            
-            
+
             //print("Sphere Hit");
             return true;
         }
@@ -230,11 +228,15 @@ public class PlayerMovement : MonoBehaviour
             return false;
         }
         
-        angle = Vector3.Angle(GravityDirection, slope.normal);
+        angle = Mathf.Abs(Vector3.Angle(GravityDirection, slope.normal));
 
-        if (angle != 180.0f)
+        if (angle < 180)
         {
-            //rigidbody.AddForce(GravityDirection * playerData.gravity * 10);
+            if (OnGround && !jumping)
+            {
+                rigidbody.AddForce(slope.normal * -playerData.gravity);    
+            }
+
             slopeHit = slope;
             return true;
         }

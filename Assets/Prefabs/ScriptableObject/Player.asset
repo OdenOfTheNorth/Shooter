@@ -17,7 +17,7 @@ MonoBehaviour:
   RunSpeed: 200
   gravity: 10
   jumpStrength: 7
-  WallJumpStrength: 4
+  WallJumpStrength: 10
   AirControll: 0.15
   MaxCounterForce: 0
   MinCounterForce: 0

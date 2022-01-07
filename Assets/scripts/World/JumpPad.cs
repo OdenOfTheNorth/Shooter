@@ -12,9 +12,13 @@ public class JumpPad : MonoBehaviour
     {
         Rigidbody body = other.gameObject.GetComponent<Rigidbody>();
 
+        Vector3 up = other.gameObject.transform.up;//cachedtransform.forward;
+        Vector3 antiGravity = Vector3.Dot(body.velocity,up) * up;
+        
         if (body)
         {
-            body.AddForce(jumpDir * jumpForce, ForceMode.Impulse);
+            //body.velocity = 
+            body.AddForce(-antiGravity + jumpDir * jumpForce, ForceMode.Impulse);
         }
     }
 }

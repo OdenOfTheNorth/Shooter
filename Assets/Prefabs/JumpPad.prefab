@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 6865173614677962788}
   - component: {fileID: 6865173614677962789}
   - component: {fileID: 6865173614677962794}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Cube (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -106,7 +106,7 @@ GameObject:
   - component: {fileID: 6865173614834539378}
   - component: {fileID: 6865173614834539379}
   - component: {fileID: 6865173614834539277}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: JumpPad
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -168,7 +168,7 @@ GameObject:
   - component: {fileID: 6865173615979718871}
   - component: {fileID: 6865173615979718868}
   - component: {fileID: 6865173615979718869}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Cube
   m_TagString: Untagged
   m_Icon: {fileID: 0}

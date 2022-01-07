@@ -1,23 +1,45 @@
+using System;
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
-public class Grid : MonoBehaviour {
+public class Grid : MonoBehaviour 
+{
+	public enum GridDirection
+	{
+		XZ,
+		XY,
+		ZY
+	}
 
+	public GridDirection Direction;
+	private GridDirection OldDirection;
+	
 	public bool displayGridGizmos;
+	[Range(0, 1)] public float alpth = 0.2f;
 	public LayerMask unwalkableMask;
 	public Vector2 gridWorldSize;
 	public float nodeRadius;
+	private float oldNodeRadius;
 	Node[,] grid;
 
 	float nodeDiameter;
 	int gridSizeX, gridSizeY;
+	int oldGridSizeX, oldGridSizeY;
 
 	void Awake() {
 		nodeDiameter = nodeRadius*2;
 		gridSizeX = Mathf.RoundToInt(gridWorldSize.x/nodeDiameter);
 		gridSizeY = Mathf.RoundToInt(gridWorldSize.y/nodeDiameter);
 		CreateGrid();
+	}
+
+	private void Update()
+	{
+		if (OldDirection != Direction || oldGridSizeX != gridSizeX || oldGridSizeY != gridSizeY || nodeRadius != oldNodeRadius)
+		{
+			CreateGrid();
+		}
 	}
 
 	public int MaxSize {
@@ -28,11 +50,39 @@ public class Grid : MonoBehaviour {
 
 	void CreateGrid() {
 		grid = new Node[gridSizeX,gridSizeY];
-		Vector3 worldBottomLeft = transform.position - Vector3.right * gridWorldSize.x/2 - Vector3.forward * gridWorldSize.y/2;
-		
+
+		Vector3 worldBottomLeft = Vector3.zero;
+		Vector3 FirstDir = Vector3.zero;
+		Vector3 SecondDir = Vector3.zero;
+
+		switch (Direction)
+		{
+			case GridDirection.XZ:
+			worldBottomLeft = transform.position - Vector3.right * gridWorldSize.x/2 - Vector3.forward * gridWorldSize.y/2;
+			FirstDir = Vector3.right;
+			SecondDir = Vector3.forward;
+				break;
+			case GridDirection.XY:
+			worldBottomLeft = transform.position - Vector3.right * gridWorldSize.x/2 - Vector3.up * gridWorldSize.y/2;
+			FirstDir = Vector3.right;
+			SecondDir = Vector3.up;
+				break;
+			case GridDirection.ZY:
+			worldBottomLeft = transform.position - Vector3.forward * gridWorldSize.x/2 - Vector3.up * gridWorldSize.y/2;
+			FirstDir = Vector3.forward;
+			SecondDir = Vector3.up;	
+				break;
+		}
+
+		OldDirection = Direction;
+		oldGridSizeX = Mathf.RoundToInt(gridWorldSize.x/nodeDiameter);
+		oldGridSizeY = Mathf.RoundToInt(gridWorldSize.y/nodeDiameter);
+		oldNodeRadius = nodeRadius;
+		nodeDiameter = nodeRadius*2;
+
 		for (int x = 0; x < gridSizeX; x ++) {
 			for (int y = 0; y < gridSizeY; y ++) {
-				Vector3 worldPoint = worldBottomLeft + Vector3.right * (x * nodeDiameter + nodeRadius) + Vector3.forward * (y * nodeDiameter + nodeRadius);
+				Vector3 worldPoint = worldBottomLeft + FirstDir * (x * nodeDiameter + nodeRadius) + SecondDir * (y * nodeDiameter + nodeRadius);
 				bool walkable = !(Physics.CheckSphere(worldPoint,nodeRadius,unwalkableMask));
 				grid[x,y] = new Node(walkable,worldPoint, x,y);
 			}
@@ -60,9 +110,29 @@ public class Grid : MonoBehaviour {
 	}
 	
 
-	public Node NodeFromWorldPoint(Vector3 worldPosition) {
-		float percentX = (worldPosition.x + gridWorldSize.x/2) / gridWorldSize.x;
-		float percentY = (worldPosition.z + gridWorldSize.y/2) / gridWorldSize.y;
+	public Node NodeFromWorldPoint(Vector3 worldPosition)
+	{
+		float percentX = 0;
+		float percentY = 0;
+		
+		switch (Direction)
+		{
+			case GridDirection.XZ:
+				percentX = (worldPosition.x + gridWorldSize.x/2) / gridWorldSize.x;
+				percentY = (worldPosition.z + gridWorldSize.y/2) / gridWorldSize.y;
+				break;
+			case GridDirection.XY:
+				percentX = (worldPosition.x + gridWorldSize.x/2) / gridWorldSize.x;
+				percentY = (worldPosition.y + gridWorldSize.y/2) / gridWorldSize.y;
+				break;
+			case GridDirection.ZY:
+				percentX = (worldPosition.z + gridWorldSize.x/2) / gridWorldSize.x;
+				percentY = (worldPosition.y + gridWorldSize.y/2) / gridWorldSize.y;
+				break;
+			default:
+				break;
+		}
+
 		percentX = Mathf.Clamp01(percentX);
 		percentY = Mathf.Clamp01(percentY);
 
@@ -72,11 +142,21 @@ public class Grid : MonoBehaviour {
 	}
 	
 	void OnDrawGizmos() {
-		Gizmos.DrawWireCube(transform.position,new Vector3(gridWorldSize.x,1,gridWorldSize.y));
+		
+		if (OldDirection != Direction || oldGridSizeX != gridSizeX || oldGridSizeY != gridSizeY || nodeRadius != oldNodeRadius)
+		{
+			CreateGrid();
+		}
+		
+		//Gizmos.DrawWireCube(transform.position,new Vector3(gridWorldSize.x,1,gridWorldSize.y));
 		if (grid != null && displayGridGizmos) {
-			foreach (Node n in grid) {
-				Gizmos.color = (n.walkable)?Color.white:Color.red;
-				Gizmos.DrawCube(n.worldPosition, Vector3.one * (nodeDiameter-.1f));
+			foreach (Node n in grid)
+			{
+				Color white = new Color(1, 1, 1, alpth);
+				Color red = new Color(1, 0, 0, alpth);
+				
+				Gizmos.color = (n.walkable) ? white : red;
+				Gizmos.DrawWireCube(n.worldPosition, Vector3.one * (nodeDiameter-.1f));
 			}
 		}
 	}

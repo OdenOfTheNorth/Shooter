@@ -72,8 +72,8 @@ public class PlayerInput : MonoBehaviour
             }
         }
 
-        abilitys[0].abilityInput = Input.GetKeyDown(KeyCode.Q);
-        abilitys[1].abilityInput = Input.GetKeyDown(KeyCode.E);
+        //abilitys[0].abilityInput = Input.GetKeyDown(KeyCode.Q);
+        //abilitys[1].abilityInput = Input.GetKeyDown(KeyCode.E);
         
         for (int i = 0; i < keys.Length; i++)
         {
@@ -95,7 +95,7 @@ public class PlayerInput : MonoBehaviour
 
                 continue;
             }
-            if (keys.Length == abilitys.Length)
+            if (keys.Length != abilitys.Length)
             {
                 if (debug)
                 {
@@ -104,7 +104,9 @@ public class PlayerInput : MonoBehaviour
 
                 continue;
             }
-            
+
+            //KeyCode key = keys[i];
+            //print("key" + key);
             abilitys[i].abilityInput = Input.GetKeyDown(keys[i]);
         }
         

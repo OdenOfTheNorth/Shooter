@@ -1,37 +1,62 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 
-
-public class ExplodingBarrel : MonoBehaviour
+public class ExplodingBarrel : Death
 {
-    private SphereCollider Collider;
+    public GameObject ExplationEffect;
+    public float MaxExplotionForce = 100;
+    public float MaxDamage = 10;
+    public float Radius = 10;
 
-
-    private List<Rigidbody> bodies;
-    
-    private void OnTriggerEnter(Collider other)
+    private void OnDrawGizmos()
     {
-        Rigidbody triggerBody = other.gameObject.GetComponent<Rigidbody>();
+        Gizmos.color = Gizmos.color = new Color(1, 0, 0, 0.5f);
+        Gizmos.DrawSphere(transform.position, Radius);
+    }
 
-        if (!triggerBody)
+    public override void Call()
+    {
+        print("ExplodingBarrel");
+        
+        Collider[] colliders = Physics.OverlapSphere(transform.position, Radius);
+
+        Instantiate(ExplationEffect, transform.position, Quaternion.identity);
+        
+        foreach (Collider col in colliders)
         {
-            return;
+            float distance = Vector3.Distance(transform.position, col.transform.position);
+            float percentigeForce = distance / Radius;
+            float forceToApply = Mathf.Lerp(0, MaxExplotionForce, 1 - percentigeForce);
+            
+            print("percentige Force" + percentigeForce);
+            
+            Rigidbody rigidbody = col.GetComponent<Rigidbody>();
+            if (rigidbody)
+            {
+                Vector3 dir = (rigidbody.position - transform.position).normalized;
+                rigidbody.AddForce(dir * forceToApply, ForceMode.Impulse);
+                //Vector3 dir = (rigidbody.position - transform.position).normalized;
+                //rigidbody.AddExplosionForce(MaxExplotionForce, transform.position, Radius);
+                //rigidbody.AddForce(dir * MaxExplotionForce, ForceMode.Impulse);
+            }
+            
+            PlayerMovement player = col.GetComponent<PlayerMovement>();
+            if (player)
+            {
+                Vector3 dir = (rigidbody.position - transform.position).normalized;
+                rigidbody.AddForce(dir * forceToApply, ForceMode.Impulse);
+            }
+
+            HealthComponent health = col.GetComponent<HealthComponent>();
+            if (health)
+            {
+                float damageAmount = MaxDamage * (1 - percentigeForce);
+                print(damageAmount);
+                health.TakeDamage(damageAmount);
+            }
         }
         
-        foreach (Rigidbody body in bodies)
-        {
-            if (body != triggerBody)
-            {
-                continue;
-            }
-            else
-            {
-                
-            }
-        }
-            
-        bodies.Add(triggerBody);
+        Destroy(gameObject);
     }
 }

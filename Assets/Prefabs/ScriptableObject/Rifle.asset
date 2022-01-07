@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Rifle
   m_EditorClassIdentifier: 
   Mesh: {fileID: 4300000, guid: c52425aa7c1a7b849a483f7cc99974de, type: 3}
-  Damage: 20
+  Damage: 3
   timeBetweenShooting: 0.5
   spread: 0
   range: 100
@@ -22,9 +22,9 @@ MonoBehaviour:
   EquipeSpeed: 3
   magazineSize: 30
   bulletsPerTap: 3
-  bulletsLeft: 0
+  bulletsLeft: 30
   bulletsShot: 0
   allowButtonHold: 0
   shooting: 0
-  readyToShoot: 0
+  readyToShoot: 1
   reloading: 0

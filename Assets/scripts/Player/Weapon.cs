@@ -25,6 +25,8 @@ public class Weapon : MonoBehaviour
 
     public void Shoot()
     {
+        //print("shoot");
+        
         WeaponDatas[currentWeaponIndex].readyToShoot = false;
 
         //Spread
@@ -44,7 +46,12 @@ public class Weapon : MonoBehaviour
         }
 
         //Graphics
-        Instantiate(bulletHoleGraphic, Hit.point, Quaternion.Euler(0, 180, 0));
+
+        if (Hit.collider != null)
+        {
+            Instantiate(bulletHoleGraphic, Hit.point, Quaternion.Euler(0, 180, 0));
+        }
+        
         Instantiate(muzzleFlash, attackPoint.position, Quaternion.identity);
 
         WeaponDatas[currentWeaponIndex].bulletsLeft--;

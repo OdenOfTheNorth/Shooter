@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -8,12 +9,22 @@ public class HealthComponent : MonoBehaviour
 
     private GameObject LastDamageDealer;
 
+    public Death dead;
+
+    private void Start()
+    {
+        dead = GetComponent<Death>();
+    }
+
     public void TakeDamage(float damageAmount)
     {
         HealthPoints -= damageAmount;
 
+        print(HealthPoints);
+        
         if (HealthPoints <= 0)
         {
+            dead.Call();
             //do something
         }
         
@@ -24,8 +35,12 @@ public class HealthComponent : MonoBehaviour
     {
         HealthPoints -= damageAmount;
         LastDamageDealer = damageDealer;
+        
+        print(HealthPoints);
+        
         if (HealthPoints <= 0)
         {
+            dead.Call();
             //do something
         }
         

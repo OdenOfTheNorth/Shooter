@@ -13,18 +13,32 @@ public class Dash : Ability
     private Vector3 savedVelocity;
 
     private float lastDashTime = 0;
-    private float DashCooldown = 5;
+    public float DashCooldown = 5;
+    public float currentColdown = 0;
+
+    public float CurrentPercentige()
+    {
+        return currentColdown / DashCooldown;
+    }
     
     private void Awake()
     {
         rigidbody = GetComponent<Rigidbody>();
     }
-    
+
+    private void Start()
+    {
+        lastDashTime = Time.time;
+    }
+
     public void Update()
     {
+        currentColdown += Time.deltaTime;
+        
         if (abilityInput && canDash)
         {
             float time = Time.time;
+          
             if (time - lastDashTime > DashCooldown)
             {
                 lastDashTime = time;

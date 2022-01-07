@@ -6,6 +6,11 @@ public class Grapple : Ability
     public Image image;
     private LineRenderer lr;
     public LayerMask grappleble;
+    
+    public float spring = 4.5f;
+    public float damper = 7f;
+    public float massScale = 4.5f;
+    
     private Rigidbody rigidbody;
     private SpringJoint joint;
     private RaycastHit hit; 
@@ -86,9 +91,9 @@ public class Grapple : Ability
         joint.maxDistance = distance * 0.8f;
         joint.minDistance = distance * 0.2f;
 
-        joint.spring = 4.5f;
-        joint.damper = 7f;
-        joint.massScale = 4.5f;
+        joint.spring = spring;
+        joint.damper = damper;
+        joint.massScale = massScale;
 
         lr.positionCount = 2;
     }

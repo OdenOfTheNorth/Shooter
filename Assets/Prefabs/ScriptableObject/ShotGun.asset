@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: ShotGun
   m_EditorClassIdentifier: 
   Mesh: {fileID: 0}
-  Damage: 0
+  Damage: 10
   timeBetweenShooting: 1
   spread: 0.06
   range: 100
@@ -22,7 +22,7 @@ MonoBehaviour:
   EquipeSpeed: 3
   magazineSize: 24
   bulletsPerTap: 6
-  bulletsLeft: 24
+  bulletsLeft: 6
   bulletsShot: 0
   allowButtonHold: 1
   shooting: 0

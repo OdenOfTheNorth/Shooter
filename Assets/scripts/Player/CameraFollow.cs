@@ -18,6 +18,8 @@ public class CameraFollow : MonoBehaviour
     float RotationX = 0;
     public float RotationY = 0;
     public float deltaSensetivity;
+    public float wallRunAngle = 20;
+    public float rotationSpeed = 10;
     private Camera camera;
     public Transform cameraTransform;
 
@@ -51,6 +53,21 @@ public class CameraFollow : MonoBehaviour
         
         Player.transform.Rotate(Vector3.up,MouseX * deltaSensetivity);
         
-        _transform.localRotation = Quaternion.Euler(RotationY,0,0);
+        //if (movement.OnWallSides[0])
+        //{
+        //    Quaternion angle = Quaternion.Euler(RotationY, 0, wallRunAngle);
+        //    angle = Quaternion.Lerp(Quaternion.identity, angle,  Time.fixedDeltaTime * rotationSpeed);
+        //    _transform.localRotation = angle;
+        //}else
+        //if (movement.OnWallSides[1])
+        //{
+        //    Quaternion angle = Quaternion.Euler(RotationY, 0, -wallRunAngle);
+        //    angle = Quaternion.Lerp(Quaternion.identity, angle,  Time.fixedDeltaTime * rotationSpeed);
+        //    _transform.localRotation = angle;
+        //}
+        //else
+        {
+            _transform.localRotation = Quaternion.Euler(RotationY,0,0);
+        }
     }
 }

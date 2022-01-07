@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor.UIElements;
 using UnityEngine;
 
 public class WallRun : MonoBehaviour
@@ -9,12 +10,12 @@ public class WallRun : MonoBehaviour
 
     [Range(0, 1)] public float maxAngle = 1;
     [Range(-1, 0)] public float minAngle = -1;
-    
+
     private Vector3 WallNormal;
     private Vector3 lastWallNormal;
     public LayerMask wallLayer;
     public int layer;
-    
+
     public void Awake()
     {
         playerMovement = GetComponent<PlayerMovement>();
@@ -27,10 +28,12 @@ public class WallRun : MonoBehaviour
         if (playerMovement.OnWall)
         {
             Vector3 antiGravity = playerMovement.GravityDirection * -playerMovement.playerData.gravity;
-            Vector3 forcePlayerIntoWall = Vector3.zero;//WallNormal * -playerMovement.playerData.gravity;
+            Vector3 forcePlayerIntoWall = WallNormal * -playerMovement.playerData.gravity;
             Vector3 forwardWallVector = playerMovement.forwardWallVector;
+
+            Vector3 forces = antiGravity + forcePlayerIntoWall + forwardWallVector + playerMovement.counterMovement(playerMovement.rigidbody.velocity);
             
-            playerMovement.rigidbody.AddForce(antiGravity + forcePlayerIntoWall + forwardWallVector, ForceMode.Acceleration);
+            playerMovement.rigidbody.AddForce( forces, ForceMode.Force);
             
             if (playerMovement.jumpInput)
             {
@@ -84,9 +87,16 @@ public class WallRun : MonoBehaviour
     
     public void OnCollisionEnter(Collision other)
     {
+        StartWallRun(other.contacts[0].normal); 
+        
+        if (wallLayer != other.gameObject.layer)
+        {
+            return;
+        }
+
         if ((wallLayer.value & 1<<other.gameObject.layer) != 0)
         {
-            StartWallRun(other.contacts[0].normal);  
+             
         }
         
         if (other.collider.gameObject.layer == layer)

@@ -12,19 +12,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2fc50b56204cb044d873016b54e00dad, type: 3}
   m_Name: ShotGun
   m_EditorClassIdentifier: 
-  Mesh: {fileID: 0}
-  Damage: 10
+  audioClip: {fileID: 909031581407670501, guid: faa29f2b5d9eb4b4c837520524dd4b58, type: 3}
+  mesh: {fileID: 8028497875862695199, guid: d6a62e69ea5d0dd498d630aaf934c383, type: 3}
+  UseProjectile: 0
+  projectile: {fileID: 0}
+  projectileForce: 0
+  Damage: 3
   timeBetweenShooting: 1
-  spread: 0.06
+  spread: 0.1
   range: 100
   reloadTime: 2
   timeBetweenShots: 0
   EquipeSpeed: 3
+  KnockBack: 10
   magazineSize: 24
   bulletsPerTap: 6
-  bulletsLeft: 6
+  bulletsLeft: 24
   bulletsShot: 0
-  allowButtonHold: 1
+  allowButtonHold: 0
   shooting: 0
   readyToShoot: 1
   reloading: 0

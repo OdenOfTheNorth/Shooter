@@ -3,9 +3,15 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "New WeaponData", menuName = "Weapon/WeaponData")]
 public class WeaponData : ScriptableObject
 {
-    [Header("Graphics")]
-    public Mesh Mesh;
+    [Header("Audio")] 
+    public GameObject audioClip;
+    [Header("Graphics")] 
+    public GameObject mesh;
     [Header("Gun stats")]
+    public bool UseProjectile; 
+    public GameObject projectile;
+    public float projectileForce;
+    
     public float Damage;
     public float timeBetweenShooting;
     public float spread;
@@ -14,6 +20,8 @@ public class WeaponData : ScriptableObject
     public float timeBetweenShots;
 
     public float EquipeSpeed = 3;
+
+    public float KnockBack = 10;
     
     public int magazineSize;
     public int bulletsPerTap;

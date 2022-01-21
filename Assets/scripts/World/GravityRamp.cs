@@ -6,7 +6,9 @@ using UnityEngine;
 public class GravityRamp : MonoBehaviour
 {
     public Transform middlePoint;
+    public Transform playerTrans;
     public PlayerMovement playerMovement;
+    public Player Player;
     public Vector3 dir;
     public Vector3 lastDir;
     public Vector3 lastPos;
@@ -37,7 +39,7 @@ public class GravityRamp : MonoBehaviour
 
     void Update()
     {
-        if (playerMovement)
+        if (playerMovement || Player)
         {
             Vector3 directionVector = Vector3.zero;
 
@@ -54,69 +56,97 @@ public class GravityRamp : MonoBehaviour
                     break;
             }
             
-            dir = (playerMovement.cachedtransform.position - middlePoint.position);
+            dir = (playerTrans.position - middlePoint.position);
 
             counterDir = Vector3.Dot(dir,directionVector) * directionVector;
 
             gravityVector = counterDir - dir;
 
-            playerMovement.GravityDirection = ReverseVector ? -gravityVector : gravityVector;
+            if (Player)
+            {
+                Player.GravityDirection = ReverseVector ? -gravityVector : gravityVector;    
+            }
+
+            if (playerMovement)
+            {
+                playerMovement.GravityDirection = ReverseVector ? -gravityVector : gravityVector;    
+            }
         }
         
         //Debug.DrawLine(middlePoint.position, lastPos);
     }
 
-    private void OnTriggerEnter(Collider other)
+    private void OnTriggerStay(Collider other)
     {
         playerMovement = other.GetComponent<PlayerMovement>();
+        Player = other.GetComponent<Player>();
+        
+        if (Player)
+        {
+            playerTrans = other.transform;
+            lastDir = Player.GravityDirection;
+        }
         
         if (playerMovement)
         {
+            playerTrans = other.transform;
             lastDir = playerMovement.GravityDirection;
         }
     }
 
     private void OnTriggerExit(Collider other)
     {
+
+
+        NewDir = ReverseVector ? -gravityVector : gravityVector;
+        /*
+        NewDir.x = Mathf.RoundToInt(dir.x);
+        NewDir.y = Mathf.RoundToInt(dir.y);
+        NewDir.z = Mathf.RoundToInt(dir.z);
+
+        if (NewDir.x > 1)
+        {
+            NewDir.x = NewDir.x / NewDir.x;
+        }
+        
+        if (NewDir.y > 1)
+        {
+            NewDir.y = NewDir.y / NewDir.y;
+        }
+        
+        if (NewDir.z > 1)
+        {
+            NewDir.z = NewDir.z / NewDir.z;
+        }
+
+        print("X old = " + dir.x + " X new = " + NewDir.x);
+        print("Y old = " + dir.y + " Y new = " + NewDir.y);
+        print("Z old = " + dir.z + " Z new = " + NewDir.z);
+
+        print(NewDir);
+        */
+        NewDir.Normalize();
+        
         if (!playerMovement)
         {
             playerMovement = other.GetComponent<PlayerMovement>();    
         }
 
+        if (!Player)
+        {
+            Player = other.GetComponent<Player>();
+        }
+        
         if (playerMovement)
         {
-            NewDir = ReverseVector ? -gravityVector : gravityVector;
-            
-            //NewDir.x = Mathf.RoundToInt(dir.x);
-            //NewDir.y = Mathf.RoundToInt(dir.y);
-            //NewDir.z = Mathf.RoundToInt(dir.z);
-
-            //if (NewDir.x > 1)
-            //{
-            //    NewDir.x = NewDir.x / NewDir.x;
-            //}
-            //
-            //if (NewDir.y > 1)
-            //{
-            //    NewDir.y = NewDir.y / NewDir.y;
-            //}
-            //
-            //if (NewDir.z > 1)
-            //{
-            //    NewDir.z = NewDir.z / NewDir.z;
-            //}
-
-            print("X old = " + dir.x + " X new = " + NewDir.x);
-            print("Y old = " + dir.y + " Y new = " + NewDir.y);
-            print("Z old = " + dir.z + " Z new = " + NewDir.z);
-
-            print(NewDir);
-            
-            NewDir.Normalize();
-            
             playerMovement.GravityDirection = NewDir;
-            
             playerMovement = null;
+        }
+        
+        if (Player)
+        {
+            Player.GravityDirection = NewDir;
+            Player = null;
         }
     }
     private void OnDrawGizmos()
@@ -129,7 +159,12 @@ public class GravityRamp : MonoBehaviour
         if (playerMovement)
         {
             Gizmos.color = Color.black;    
-            Gizmos.DrawLine(middlePoint.position, playerMovement.cachedtransform.position);
+            Gizmos.DrawLine(middlePoint.position, playerMovement.orientation.position);
+        }
+        if (Player)
+        {
+            Gizmos.color = Color.black;    
+            Gizmos.DrawLine(middlePoint.position, Player.transform.position);
         }
 
         if (middlePoint)

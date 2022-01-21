@@ -108,8 +108,6 @@ GameObject:
   - component: {fileID: 4755928444170929337}
   - component: {fileID: 512768375551796150}
   - component: {fileID: 3282438201111183587}
-  - component: {fileID: 8381223617999787862}
-  - component: {fileID: 6102484589944669067}
   m_Layer: 0
   m_Name: EnemyLaser
   m_TagString: Untagged
@@ -195,32 +193,3 @@ CapsuleCollider:
   m_Height: 2
   m_Direction: 1
   m_Center: {x: 0.000000059604645, y: 0, z: -0.00000008940697}
---- !u!114 &8381223617999787862
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3474430118418160323}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c77ea331bbe3523469590928876c00c6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  GridObject: {fileID: 0}
---- !u!114 &6102484589944669067
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3474430118418160323}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 899df673893e11144b938b0700f42223, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  target: {fileID: 0}
-  speed: 20
-  turnSpeed: 3
-  turnDist: 5

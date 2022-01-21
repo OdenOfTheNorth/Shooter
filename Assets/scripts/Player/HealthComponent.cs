@@ -1,49 +1,69 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
+using UnityEngine.UI;
 
 public class HealthComponent : MonoBehaviour
 {
+    public float MaxHealthPoints = 10;
     public float HealthPoints = 10;
-
+    
     private GameObject LastDamageDealer;
-
-    public Death dead;
+    //public ActionToDo dead;
+    public Slider Slider;
+    public UnityEvent DamageTakenEvent;
+    public UnityEvent OnDead;
 
     private void Start()
     {
-        dead = GetComponent<Death>();
+        //dead = GetComponent<ActionToDo>();
+        HealthPoints = MaxHealthPoints;
+    }
+
+    private void Update()
+    {
+        if (HealthPoints <= 0)
+        {
+            OnDead.Invoke();
+            //dead.Call();
+            //do something
+        }
     }
 
     public void TakeDamage(float damageAmount)
     {
         HealthPoints -= damageAmount;
 
-        print(HealthPoints);
-        
-        if (HealthPoints <= 0)
+        if (DamageTakenEvent != null)
         {
-            dead.Call();
-            //do something
+            DamageTakenEvent.Invoke();    
         }
         
-        return;
+        //print(HealthPoints);
+        if (Slider)
+        {
+            Slider.value = GetPercentige();
+        }
     }
     
     public void TakeDamage(float damageAmount, GameObject damageDealer)
     {
         HealthPoints -= damageAmount;
         LastDamageDealer = damageDealer;
-        
-        print(HealthPoints);
-        
-        if (HealthPoints <= 0)
+
+        if (DamageTakenEvent != null)
         {
-            dead.Call();
-            //do something
+            DamageTakenEvent.Invoke();
         }
         
-        return;
+        //print(HealthPoints);
+        if (Slider)
+        {
+            Slider.value = GetPercentige();
+        }
+    }
+
+    public float GetPercentige()
+    {
+        return HealthPoints / MaxHealthPoints;
     }
 }

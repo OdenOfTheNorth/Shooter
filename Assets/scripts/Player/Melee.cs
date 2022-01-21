@@ -36,7 +36,9 @@ public class Melee : Ability
             Rigidbody triggerBody = hit.transform.GetComponent<Rigidbody>();
             if (triggerBody)
             {
-                triggerBody.AddForce( camera.transform.forward * KnockBack, ForceMode.Impulse);    
+                
+                
+                triggerBody.AddForceAtPosition( camera.transform.forward * KnockBack, hit.point,ForceMode.Impulse);    
             }
             
             HealthComponent Health =  hit.transform.GetComponent<HealthComponent>();

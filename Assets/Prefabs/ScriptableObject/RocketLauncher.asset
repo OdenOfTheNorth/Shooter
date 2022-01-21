@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2fc50b56204cb044d873016b54e00dad, type: 3}
+  m_Name: RocketLauncher
+  m_EditorClassIdentifier: 
+  audioClip: {fileID: 0}
+  mesh: {fileID: 2676732851786264825, guid: 81edceaaaabe0164a9dc82f3bf127709, type: 3}
+  UseProjectile: 1
+  projectile: {fileID: 4223145365138449170, guid: f92a7cb140e8f5a45a31f567cebbd8b5, type: 3}
+  projectileForce: 150
+  Damage: 0
+  timeBetweenShooting: 1
+  spread: 0
+  range: 0
+  reloadTime: 2
+  timeBetweenShots: 1
+  EquipeSpeed: 3
+  KnockBack: 10
+  magazineSize: 1
+  bulletsPerTap: 1
+  bulletsLeft: 0
+  bulletsShot: 0
+  allowButtonHold: 0
+  shooting: 0
+  readyToShoot: 0
+  reloading: 0

@@ -1,206 +1,395 @@
-using System;
 using UnityEngine;
 
 [RequireComponent(typeof(PlayerInput), typeof(Rigidbody) )]
 public class PlayerMovement : MonoBehaviour
 {
-    [Header("Input")]
+    public PlayerData playerData;
+
+    [Header("Input")] 
     public float forwardInput;
     public float rightInput;
     public bool runInput;
     public bool crouchInput;
     public bool jumpInput;
-    [Header("States")]
-    public bool OnWall = false;
-    [HideInInspector] public bool[] OnWallSides = new bool[2];
-    //[HideInInspector] public bool OnLeftWall = false;
-    public bool OnGround = false;
-    public bool OnSlope = false;
-    public bool ShouldApplyGravity = true;
-    public bool jumping = false;
 
-    public float angle;
+    [Header("States")] 
+    public bool AllowInput = true;
+    public bool OnWall = false;
+    public bool isGrounded = false;
+    public bool OnSlope = false;
+    public bool isGrappeling = false;
+    public bool isCrouching = false;
+    public bool isSliding = false;
+    public bool ShouldApplyGravity = true;
+    public bool ShouldIncreaseGravity = true;
+    public bool jumping = false;
+    public float slopeAngle;
     
-    public PlayerData playerData;
+    [Header("Movement")]
     public int CurrnetJumpCount = 0;
-    public float currentSpeed = 10f;
-    public float currentCounterForce = 10f;
-    public LayerMask GroundLayer;
+    public float currentSpeed = 5f;
+    public float acceliration = 10f;
+    private float movementMultiplier = 10;
+    [Header("Drag")]
+    public float groundDrag = 6f;
+    public float airDrag = 2f;
+    public float grappelDrag = 0f;
+    public float slideDrag = 0.2f;
+    public float VelocityThreshold = 15f;
+    public float Magnetude;
     
+    private float currentCounterForce = 10f;
+
     [Header("Wall")]
+    public float maxWallDistance = 1.2f;
+    [SerializeField] public bool wallLeft = false;
+    [SerializeField] public bool wallRight = false;
+    
+    [Header("Crouch & Slide")]
+    private Vector3 crouchScale = new Vector3(1, 0.5f, 1);
+    private Vector3 playerScale = Vector3.one;
+    public float slideForce = 400;
+
+    [Header("Camera")]
     public LayerMask WallLayer;
     [Range(0, 1)] public float maxAngle = 1;
     [Range(-1, 0)] public float minAngle = -1;
     private Vector3 lastWallNormal;
-    
-    public float sphereRadius;
-    
-    [HideInInspector] float lastTimeJumped = 0f;
-    [HideInInspector] const float jumpGroundingPreventionTime = 0.2f;
 
     [Header("Ground")]
+    public LayerMask GroundLayer;
     [SerializeField] private float maxDistance = 1.2f;
-    [HideInInspector] public float maxWallDistance = 1.2f;
-    
-    private Vector3 GroundMovement;
-    private Vector3 SlopeMovement;
+    public float sphereRadius;
+    public float lastFallTime;
+
     
     private RaycastHit GroundHit;
     private RaycastHit slopeHit;
+    private RaycastHit leftWallHit;
+    private RaycastHit rightWallHit;
     private RaycastHit WallHit;
-    [Header("Velocity and Gravity")]
-    public Vector3 velocity;
-    public Vector3 GravityDirection;
-    public float maxVelocity = 10;
-    [Range(0, 1)] public float maxVelocityThreshold = 0.95f;
-    public float currentPercentige = 0;
     
+    [Header("Velocity and Gravity")]
+    public Vector3 moveDirection;
+    public Vector3 GravityDirection;
+    public float currentGravityStrength = 10; 
+    //Directions
+    [HideInInspector] public Vector3 SlopeMovement;
     [HideInInspector] public Vector3 forwardWallVector;
     [HideInInspector] public Vector3 gravityUp;
     [HideInInspector] public Vector3 cameraForward;
     [HideInInspector] public Vector3 rightVector;
     [HideInInspector] public Vector3 forwardVector;
     
-    public Transform cachedtransform;
-    [HideInInspector] public Transform cameraTransform;
+    public Transform orientation;
+    public Transform GroundCheck;
+    [HideInInspector] public Transform playerCam;
     [HideInInspector] public Rigidbody rigidbody;
+    public CapsuleCollider _capsuleCollider;
+    public bool DebugGizmos = false;
     
-    private CapsuleCollider _capsuleCollider;
-    [HideInInspector] public int layerMask;
-    void Start()
+    private void Awake()
     {
+        playerCam = Camera.main.transform;
+        rigidbody = GetComponent<Rigidbody>();
         _capsuleCollider = GetComponent<CapsuleCollider>();
         sphereRadius = _capsuleCollider.radius * 0.9f;
-        rigidbody = GetComponent<Rigidbody>();
+        orientation = transform;
+    }
 
+    private void Start()
+    {
         rigidbody.useGravity = false;
         rigidbody.constraints = RigidbodyConstraints.FreezeRotation;
         
         currentSpeed = playerData.WalkSpeed;
-        cameraTransform = Camera.main.transform;
-        cachedtransform = transform;
         currentCounterForce = playerData.GroundCounterForce;
     }
 
     private void RotationTowardsGravityDirection()
     {
-        Vector3 gravityUp = -GravityDirection.normalized;
-        Quaternion targetRoation = Quaternion.FromToRotation(cachedtransform.up, gravityUp) * cachedtransform.rotation;
-        cachedtransform.rotation = Quaternion.Slerp(cachedtransform.rotation, targetRoation, playerData.RotationSpeed * Time.fixedDeltaTime);
+        Quaternion targetRoation = Quaternion.FromToRotation(orientation.up, -GravityDirection.normalized) * orientation.rotation;
+        orientation.rotation = Quaternion.Slerp(orientation.rotation, targetRoation, playerData.RotationSpeed * Time.fixedDeltaTime);
     }
 
     private void CalculateMovement()
     {
         //Move Direction
         gravityUp = -GravityDirection.normalized;
-        cameraForward = Vector3.Cross(gravityUp,cameraTransform.right);
+        cameraForward = Vector3.Cross(gravityUp,playerCam.right);
         rightVector = Vector3.Cross(gravityUp, cameraForward);
         forwardVector = Vector3.Cross(gravityUp, rightVector);
-        GroundMovement = (rightVector * -rightInput + forwardVector * forwardInput).normalized;
+        
+        moveDirection = (rightVector * -rightInput + forwardVector * forwardInput).normalized;
+    }
+
+    public void ResetDownwardsVel()
+    {
+        Vector3 up = orientation.up;
+        Vector3 counterUpVelocity = Vector3.Dot(rigidbody.velocity,up) * up;
+        rigidbody.velocity -= counterUpVelocity;
+        currentGravityStrength = playerData.gravity;
     }
 
     private void Movement()
     {
-        float deltaTime = Time.deltaTime;
-        
+        //Gravity
         if (ShouldApplyGravity)
         {
-            rigidbody.AddForce(GravityDirection.normalized * playerData.gravity, ForceMode.Acceleration);    
-        }
-        if (OnGround && !OnSlope)
-        {
-            velocity = (GroundMovement * currentSpeed);// + counterMovement(rigidbody.velocity);
-            Vector3 deltaToMove = velocity * deltaTime;
-            //rigidbody.AddForce(velocity, ForceMode.Acceleration);
-        }
-        else if (OnGround && OnSlope)
-        {
-            SlopeMovement = Vector3.ProjectOnPlane(GroundMovement, GravityDirection);
-            velocity = (SlopeMovement * currentSpeed);// + counterMovement(rigidbody.velocity);
-            Vector3 deltaToMove = velocity * deltaTime;
-            //rigidbody.AddForce(velocity , ForceMode.Acceleration);
-        }
-        else if (!OnGround)
-        {
-            velocity = (GroundMovement * (currentSpeed * playerData.AirControll));// + counterMovement(rigidbody.velocity);
-            //rigidbody.AddForce(velocity , ForceMode.Acceleration);  
+            if (!isGrounded)
+            {
+                if (ShouldIncreaseGravity)
+                {
+                    currentGravityStrength += Time.deltaTime * playerData.GravityIncrease;
+
+                    currentGravityStrength =
+                        Mathf.Clamp(currentGravityStrength, playerData.gravity, playerData.MaxGravity);
+                }
+                else
+                {
+                    currentGravityStrength = playerData.gravity;
+                }
+                rigidbody.AddForce(GravityDirection.normalized * currentGravityStrength, ForceMode.Force);    
+            }
+            else
+            {
+                rigidbody.AddForce(GravityDirection.normalized * playerData.gravity, ForceMode.Force);    
+            }
         }
 
-        Vector3 counterForce = (OnGround ? counterMovement(rigidbody.velocity) : counterMovement(rigidbody.velocity));
-        
-        rigidbody.AddForce(velocity + counterMovement(rigidbody.velocity), ForceMode.Acceleration);//
+        //Move
+        if (!isSliding)
+        {
+            if (isGrounded && !CheckSlope())
+            {
+                moveDirection = (moveDirection.normalized * currentSpeed * movementMultiplier);
+            }
+            else if (isGrounded && CheckSlope())
+            {
+                SlopeMovement = Vector3.ProjectOnPlane(moveDirection, slopeHit.normal);
+                moveDirection = (SlopeMovement.normalized * currentSpeed * movementMultiplier);
+            }
+            else if (!isGrounded && !OnWall)
+            {
+                moveDirection = moveDirection.normalized * currentSpeed * movementMultiplier * playerData.AirControll;
+            }        
+            else if (!isGrounded && OnWall)
+            {
+                moveDirection = (moveDirection.normalized * currentSpeed * movementMultiplier);
+            }
+        }
 
+        rigidbody.AddForce(moveDirection);
+
+        //Magnetude = rigidbody.velocity.magnitude;
     }
 
     private void Update()
     {
-        OnGround = CheckGrounded();
-        OnSlope = (OnGround == true ? CheckSlope() : false);
-        OnWall = CheckWall();    
+        if (playerData == null)
+        {
+            print("playerData is null");
+            //Debug.Break();
+            return;
+        }
         
+        if (!_capsuleCollider)
+        {
+            return;
+        }
+        
+        isGrounded = CheckGrounded();
+        OnSlope = CheckSlope();
+        OnWall = CheckWall();
+        
+        WaltWall();
+        CalculateMovement();
         SetCurrentSpeed();
+        RigidBodyDrag();
 
-        Jump();
+        if (CanWallRun())
+        {
+            if (wallLeft)
+            {
+                StartWallRun();
+            }
+            else if (wallRight)
+            {
+                StartWallRun();
+            }
+            else
+            {
+                EndWallRun(Vector3.zero);
+            }
+        }
+        else
+        {
+            EndWallRun(Vector3.zero);
+        }
         
-        //layerMask = 1 << GroundLayer;
-        //layerMask = ~layerMask;
-        //print(rigidbody.velocity.magnitude);
+        Jump();
+
+        string currentSpeed = "CurrentSpeed\n" + Magnetude;
+    }
+    
+    private void FixedUpdate()
+    {
+        if (playerData == null)
+        {
+            print("playerData is null");
+            //Debug.Break();
+            return;
+        }
+        
+        Movement();
+        RotationTowardsGravityDirection();
+    }
+    public bool CanCrouch()
+    {
+        return (isGrounded || OnSlope);
+    }
+
+    void WaltWall()
+    {
+        RaycastHit hit;
+
+        Vector3 cheackPos = orientation.position + orientation.forward * ((_capsuleCollider.radius) + 0.1f);
+        float maxWaltDistance = _capsuleCollider.height * 0.5f;
+        
+        Debug.DrawLine(cheackPos, cheackPos + orientation.up * -maxWaltDistance, Color.green);
+        Physics.Raycast(cheackPos, -orientation.up, out hit, maxWaltDistance, GroundLayer);
+
+        if (hit.collider != null)
+        {
+            float trueDistance = (maxWaltDistance - hit.distance);
+            //rigidbody.AddForce(GravityDirection * -trueDistance, ForceMode.Acceleration);
+            Debug.DrawLine(hit.point,hit.point + GravityDirection * trueDistance, Color.red);
+            //Debug.Break();
+        }
+    }
+    
+    public void StartCrouch() 
+    {
+        orientation.localScale = crouchScale;
+
+        Vector3 NewPos = orientation.position + (GravityDirection.normalized * 0.5f);
+
+        //isCrouching = true;
+        
+        orientation.position = NewPos;// new Vector3(transform.position.x, transform.position.y - 0.5f, transform.position.z);
+    
+        if (rigidbody.velocity.sqrMagnitude < (VelocityThreshold * VelocityThreshold) && isCrouching)
+        {
+            //AllowInput = false;
+            isCrouching = false;
+            isSliding = true;
+            rigidbody.AddForce(orientation.forward * slideForce, ForceMode.Impulse);
+        }
+        else
+        {
+            //AllowInput = true;
+            isCrouching = true;
+            isSliding = false;
+        }
+    }
+    
+    public void StopCrouch() {
+        orientation.localScale = playerScale;
+        Vector3 NewPos = orientation.position + (GravityDirection.normalized * -0.5f);
+        orientation.position = NewPos;// new Vector3(transform.position.x, transform.position.y + 0.5f, transform.position.z);
+        isCrouching = false;
+    }
+
+    void RigidBodyDrag()
+    {
+        if (isGrounded && !isSliding)
+        {
+            rigidbody.drag = groundDrag;
+        }
+        else if (isGrounded && isSliding)
+        {
+            //rigidbody.drag = slideDrag;
+        }
+        else if (!isGrounded && !isGrappeling)
+        {
+            rigidbody.drag = airDrag;
+        }
+        else
+        {
+            rigidbody.drag = grappelDrag;
+        }
     }
 
     public void Jump()
     {
+        if (OnWall)
+        {
+            return;
+        }
+        
         if (CanJump())
         {
             jumping = true;
-            CurrnetJumpCount++;
 
-            Vector3 up = cachedtransform.up;
-            Vector3 counterUpVelocity = Vector3.Dot(rigidbody.velocity,up) * up;
-
-            //rigidbody.velocity += counterUpVelocity;
+            bool coyoteTimeNotOver = (lastFallTime - Time.deltaTime > playerData.coyoteTime);
             
+            if (!isGrounded)
+            {
+                CurrnetJumpCount++;
+                ResetDownwardsVel();
+                //moveDirection = (moveDirection.normalized * currentSpeed * movementMultiplier);
+                rigidbody.AddForce(moveDirection * currentSpeed, ForceMode.Impulse);  
+            }
+
             Vector3 jumpStrength = GravityDirection.normalized * -playerData.jumpStrength;
-            
-            rigidbody.AddForce(jumpStrength + counterUpVelocity, ForceMode.Impulse);    
+            rigidbody.AddForce(jumpStrength, ForceMode.Impulse);    
         }
     }
 
-    private void FixedUpdate()
-    {
-        CalculateMovement();
-        Movement();
-        RotationTowardsGravityDirection();
-    }
 
-    public Vector3 counterMovement(Vector3 Vel)
+    
+    public Vector3 CounterMovement(Vector3 Vel)
     {
-        Vector3 right =  Vector3.ProjectOnPlane(cachedtransform.right, GravityDirection);//cachedtransform.right;
-        Vector3 forward =  Vector3.ProjectOnPlane(cachedtransform.forward, GravityDirection);//cachedtransform.forward;
-        //Vector3 up =  Vector3.ProjectOnPlane(cachedtransform.up, GravityDirection);//cachedtransform.forward;
-        //Vector3 counterUpForce = Vector3.Dot(Vel,up) * up;
+        if (!isGrounded || jumping)
+        {
+            return Vector3.zero;
+        }
+
+        Vector3 right = Vector3.ProjectOnPlane(rightVector, GravityDirection);
+        Vector3 forward = Vector3.ProjectOnPlane(forwardVector, GravityDirection);
+        Vector3 counterForwardVelocity = (Vector3.Dot(Vel,right) * right);
+        Vector3 counterRightVelocity = (Vector3.Dot(Vel,forward) * forward);
+        Vector3 counterVelocity = counterForwardVelocity + counterRightVelocity;
+
+        return counterVelocity * -currentCounterForce;
+    }
+    
+    public Vector2 GetVelWithoutGravityDirection(Vector3 Vel)
+    {
+        float x = 0;
+        float y = 0;
+        
+        Vector3 up = -GravityDirection;
+        Vector3 right = orientation.right;
+        Vector3 forward = orientation.forward;
+        
+        Vector3 counterUpForce = Vector3.Dot(Vel,up) * up;
         Vector3 counterForwardVelocity = Vector3.Dot(Vel,right) * right;
         Vector3 counterRightVelocity = Vector3.Dot(Vel,forward) * forward;
-        Vector3 counterVelocity = counterForwardVelocity + counterRightVelocity;// rigidbody.velocity * -rigidbody.velocity.magnitude;
-
-        /*float rigidBodyVelocity = (rigidbody.velocity + counterUpForce).magnitude;
-        currentPercentige = Mathf.Abs(rigidBodyVelocity / maxVelocity);
-        if (currentPercentige > maxVelocityThreshold)
-        {
-            maxVelocity += 5 * Time.deltaTime;
-        }        
-        if (currentPercentige < 1 - maxVelocityThreshold)
-        {
-            maxVelocity -= 5 * Time.deltaTime;
-        }
-        maxVelocity = Mathf.Clamp(maxVelocity, 0, maxVelocity);
-        rigidbody.velocity = Vector3.ClampMagnitude(rigidbody.velocity, maxVelocity);*/
         
-        return counterVelocity * -currentCounterForce;//-currentPercentige * rigidBodyVelocity;
+        x = Mathf.Abs((Vel - counterUpForce - counterRightVelocity).magnitude);
+        y = Mathf.Abs((Vel - counterUpForce - counterForwardVelocity).magnitude);
+        //print("counterForwardVelocity.magnitude" + counterForwardVelocity.magnitude + "forwardMagnetude = " + y + "counterRightVelocity.magnitude" + counterRightVelocity.magnitude + "rightMagnetude = " + x);
+        return new Vector2(x, y);
     }
-
+    
     private void OnDrawGizmos()
     {
-        
+        if (DebugGizmos)
+        {
+            Vector3 pos = orientation.position + (GravityDirection.normalized * (_capsuleCollider.height / 2));
+            Gizmos.DrawWireSphere(pos, sphereRadius);   
+        }
     }
 
     public void Landed()
@@ -208,29 +397,29 @@ public class PlayerMovement : MonoBehaviour
         jumping = false;
         CurrnetJumpCount = 0;
         currentCounterForce = playerData.GroundCounterForce;
+        currentGravityStrength = playerData.gravity;
     }
 
     private bool CheckGrounded()
     {
-        Vector3 pos = cachedtransform.position + (GravityDirection * maxDistance);
-       
-        //Physics.Raycast(pos, directions[i], out hit[i], maxWallDistance, layerMask);RaycastHit spahereHit;
-        //Physics.Raycast(pos + _capsuleCollider.center, GravityDirection, out GroundHit,_capsuleCollider.height + maxDistance,layerMask);
+        //Vector3 pos = orientation.position + (GravityDirection.normalized * (_capsuleCollider.height / 2));
+
+        bool ground = Physics.CheckSphere(GroundCheck.position, sphereRadius, GroundLayer);
         
-        if (Physics.CheckSphere(pos, sphereRadius, GroundLayer))//
+        if (ground)//
         {
-            if (!OnGround)
+            if (!isGrounded)
             {
                 Landed();
             }
 
-            //print("Sphere Hit");
+            lastFallTime = 0;
             return true;
         }
         else
         {
+            lastFallTime += Time.deltaTime;
             currentCounterForce = playerData.AirCounterForce;
-            //print("Sphere not Hit");
             return false;
         }
         
@@ -239,9 +428,13 @@ public class PlayerMovement : MonoBehaviour
     
     private bool CheckSlope()
     {
-        Vector3 pos = cachedtransform.position;
-        Debug.DrawRay(pos + (GravityDirection.normalized * _capsuleCollider.height / 2), GravityDirection.normalized, Color.blue);
-        
+        Vector3 pos = orientation.position;
+       
+        if (DebugGizmos)
+        {
+            Debug.DrawRay(pos + (GravityDirection.normalized * _capsuleCollider.height / 2), GravityDirection.normalized, Color.blue);
+        }
+
         RaycastHit slope;
         Physics.Raycast(pos + _capsuleCollider.center, GravityDirection, out slope,_capsuleCollider.height + maxDistance,GroundLayer);//layerMask
 
@@ -249,16 +442,19 @@ public class PlayerMovement : MonoBehaviour
         {
             return false;
         }
-        
-        angle = Mathf.Abs(Vector3.Angle(GravityDirection, slope.normal));
 
-        if (angle < 180)
+        if (CheckGrounded())
         {
-            Debug.DrawLine(slope.point ,slope.point + slope.normal, Color.green);
-            
-            if (OnGround && !jumping)
+            ShouldIncreaseGravity = true;
+        }
+        
+        slopeAngle = Mathf.Abs(Vector3.Angle(GravityDirection, slope.normal));
+
+        if (slopeAngle < 180)
+        {
+            if (DebugGizmos)
             {
-                rigidbody.AddForce(slope.normal * -playerData.gravity);    
+                Debug.DrawLine(slope.point ,slope.point + slope.normal, Color.green);
             }
 
             slopeHit = slope;
@@ -269,62 +465,33 @@ public class PlayerMovement : MonoBehaviour
             slopeHit = slope;
             return false;
         }
-        
-        if (slope.collider != null && slope.normal != GravityDirection)
-        {
-            //currentCounterForce = playerData.SlideCounterForce;
-            slopeHit = slope;
-            return true;
-        }
-        else if (slope.collider == null || slope.normal == GravityDirection)
-        {
-            slopeHit = slope;
-            return false;
-        }
-
-        return false;
     }
+
+
+    
 
     void SetCurrentSpeed()
     {
-        if (runInput)
+        if (runInput && isGrounded)
         {
-            currentSpeed = playerData.RunSpeed;
+            currentSpeed = Mathf.Lerp(currentSpeed, playerData.RunSpeed, acceliration * Time.deltaTime);
         }
-        else// if (crouchInput)
+        else
         {
-            currentSpeed = playerData.WalkSpeed;
+            currentSpeed = Mathf.Lerp(currentSpeed, playerData.WalkSpeed, acceliration * Time.deltaTime);
         }
-    }
-
-    private void OnCollisionEnter(Collision other)
-    {
-        float dotAngle = Vector3.Dot(forwardVector, other.contacts[0].normal);
-
-        //&print(dotAngle);
-    }
-
-    void LockOnWall(Vector3 Wallnormal)
-    {
-        transform.position = cachedtransform.position + (Wallnormal * (_capsuleCollider.radius * 0.5f));
-    }
-
-    void LockOnGround(Vector3 groundLevel)
-    {
-        transform.position = groundLevel + (GravityDirection * (-_capsuleCollider.height * 0.5f));
     }
 
     bool CanJump()
     {
-        //print(CurrnetJumpCount + " " + playerData.MaxJumpCount );
-        return (OnGround || CurrnetJumpCount < playerData.MaxJumpCount || OnSlope || OnWall) && jumpInput;
+        return (isGrounded || CurrnetJumpCount < playerData.MaxJumpCount || OnSlope) && jumpInput;
     }
     
     private bool CheckWall()
     {
-        Vector3 pos = cachedtransform.position;
-        Vector3 right = cachedtransform.right;
-        Vector3 forward = cachedtransform.forward;
+        Vector3 pos = orientation.position;
+        Vector3 right = orientation.right;
+        Vector3 forward = orientation.forward;
         
         Vector3[] directions =
         {
@@ -338,35 +505,38 @@ public class PlayerMovement : MonoBehaviour
             (-right - forward).normalized
         };
 
-        RaycastHit[] hit = new RaycastHit[directions.Length]; 
+        //RaycastHit[] hit = new RaycastHit[directions.Length]; 
         
         for (int i = 0; i < directions.Length; i++)
         {
-            var ray = new Ray(pos, directions[i]);
-            Physics.Raycast(pos, directions[i], out hit[i], maxWallDistance, WallLayer);
-            
-            //Physics.Raycast(pos + _capsuleCollider.center, GravityDirection, out slope,_capsuleCollider.height + maxDistance,GroundLayer);//layerMask
-            
-            Debug.DrawRay(pos, directions[i] * maxWallDistance, Color.red);
-           
-            if (hit[i].collider != null)
+            Physics.Raycast(pos, directions[i], out WallHit, maxWallDistance, WallLayer);
+
+            if (DebugGizmos)
             {
-                Debug.DrawRay(hit[i].point, hit[i].normal * maxWallDistance, Color.green);
-                //print("OnWall");
+                Debug.DrawRay(pos, directions[i] * maxWallDistance, Color.red);
+            }
+
+            if (WallHit.collider != null)
+            {
+                if (DebugGizmos)
+                {
+                    Debug.DrawRay(WallHit.point, WallHit.normal * maxWallDistance, Color.green);    
+                }
 
                 int half = Mathf.RoundToInt(directions.Length / 2);
 
-                if (half > i)
+                if (half < i)
                 {
-                    OnWallSides[0] = true; 
+                    wallLeft = true;
+                    leftWallHit = WallHit;
                 }
                 else
                 {
-                    OnWallSides[1] = true; 
+                    wallRight = true; 
+                    rightWallHit = WallHit;
                 }
-                
-                //OnWallSides[half] = true;
-                StartWallRun(hit[i]);
+
+                //StartWallRun();
                 return true;
             }
             else
@@ -375,153 +545,96 @@ public class PlayerMovement : MonoBehaviour
                 
                 if (half > i)
                 {
-                    OnWallSides[0] = false; 
+                    wallLeft = false; 
                 }
                 else
                 {
-                    OnWallSides[1] = false; 
+                    wallRight = false; 
                 }
             }
         }
         return false;
     }
-    
-    public void StartWallRun(RaycastHit hit)
+
+    private bool CanWallRun()
     {
-        Vector3 WallNormal = hit.normal;
-        
-        if (WallNormal == lastWallNormal)
+        if (!isGrounded)
         {
-            EndWallRun(Vector3.zero);
-            print("SameWall");
-            return;
+            return true;
         }
         
-        if ((forwardInput == 0 || rightInput == 0) && OnGround)
+        if ((forwardInput == 0 && rightInput == 0))
         {
             EndWallRun(Vector3.zero);
-            print("no input");
-            return;
+            //print("no input");
+            return false;
         }
 
-        float dotAngle = Vector3.Dot(forwardVector, WallNormal);
+        return true;
+    }
+    
+    public void StartWallRun()//RaycastHit hit
+    {
+        ShouldApplyGravity = false;
+        
+        rigidbody.AddForce(GravityDirection.normalized, ForceMode.Force);
 
-        print(dotAngle);
-
+        float dotAngle = Vector3.Dot(forwardVector, WallHit.normal);
+        //print(dotAngle);
+        
         if (dotAngle < maxAngle && dotAngle > minAngle)
         {
-            //OnWall = true;
-            CurrnetJumpCount = 0;
-            forwardWallVector = (Vector3.ProjectOnPlane(forwardVector, WallNormal).normalized * currentSpeed * 0.5f);// + hit.transform.up * playerData.gravity;
-            
-            Vector3 up = Vector3.ProjectOnPlane(cachedtransform.up, GravityDirection);//cachedtransform.forward;
-            Vector3 antiGravity = Vector3.Dot(rigidbody.velocity,up) * up;
-            Vector3 forces = (-WallNormal * playerData.gravity) + antiGravity + forwardWallVector + counterMovement(rigidbody.velocity);
+            Vector3 forward = Vector3.ProjectOnPlane(orientation.forward, WallHit.normal);
 
-            rigidbody.AddForce(forces, ForceMode.Acceleration);
-            
+            moveDirection = forward.normalized;
+        
             if (jumpInput)
             {
-                Vector3 wallJump = (WallNormal * playerData.WallJumpStrength) + antiGravity - (GravityDirection.normalized * playerData.jumpStrength);// //+ ( * -playerData.jumpStrength);
-                rigidbody.AddForce(wallJump, ForceMode.Impulse);//Jump();
-                EndWallRun(WallNormal);
+                print("Jump");
+            
+                if (wallLeft)
+                {
+                    print("Jump wallLeft");
+                    Vector3 wallRunJumpDirection = 
+                        (orientation.up * playerData.WallJumpUpStrength) + 
+                        (leftWallHit.normal * playerData.WallJumpDirStrength) +
+                        (moveDirection.normalized * 10);
+                    rigidbody.AddForce(wallRunJumpDirection, ForceMode.Impulse);
+                }
+            
+                if (wallRight)
+                {
+                    print("Jump wallRight");
+                    Vector3 wallRunJumpDirection = 
+                        (orientation.up * playerData.WallJumpUpStrength) + 
+                        (rightWallHit.normal * playerData.WallJumpDirStrength) +
+                        (moveDirection.normalized * 10);
+                    rigidbody.AddForce(wallRunJumpDirection, ForceMode.Impulse);
+                }
             }
+
+            CurrnetJumpCount = 0;
         }
     }
     
     public void EndWallRun(Vector3 WallNormal)
     {
-        rigidbody.AddForce(WallNormal * playerData.gravity, ForceMode.Acceleration);
-
         lastWallNormal = WallNormal;
         ShouldApplyGravity = true;
         OnWall = false;
     }
-    
-    /*
-    public void EndWallRun()
-    {   //CurrnetJumpCount++;
-        ShouldApplyGravity = true;
-        //print("NotOnWall");
-    }
-    
-    private bool CheckWall()
-    {
-        Vector3 pos = cachedtransform.position;
-        Vector3 right = cachedtransform.right;
-        Vector3 forward = cachedtransform.forward;
-        
-        Vector3[] directions =
-        {
-            //forward,
-            right,
-            //(right + forward).normalized,
-            //(right - forward).normalized,
-            //-forward,
-            -right,
-            //(-right + forward).normalized,
-            //(-right - forward).normalized
-        };
 
-        RaycastHit[] hit = new RaycastHit[directions.Length]; 
-        
-        //int layerMask = 1 << WallLayer;
-        //layerMask = ~layerMask;
-        
-        for (int i = 0; i < directions.Length; i++)
-        {
-            Physics.Raycast(pos, directions[i], out hit[i], maxWallDistance, layerMask);
-            Debug.DrawRay(pos, directions[i] * maxWallDistance, Color.red);
-           
-            if (hit[i].collider != null)
-            {
-                //print("OnWall");
-                
-                StartWallRun(hit[i].normal);
-                return true;
-            }
-        }
-        EndWallRun();
-        return false;
+    private void OnCollisionStay(Collision other)
+    {
+        //isGrounded = CheckGrounded();
+    }
+    private void OnCollisionExit(Collision other)
+    {
+        //isGrounded = CheckGrounded();
     }
 
-    public void StartWallRun(Vector3 WallNormal)
+    private void OnCollisionEnter(Collision other)
     {
-        if ((forwardInput == 0 || rightInput == 0) && OnGround)
-        {
-            return;
-        }
-
-        //float angle = Vector3.Dot(forwardVector, WallNormal);
-        //if (angle < 0.0f) { return; }
-        
-        currentCounterForce = playerData.GroundCounterForce;
-
-        CurrnetJumpCount = 0;
-        //
-        if (ShouldApplyGravity)
-        {
-            ShouldApplyGravity = false;
-            rigidbody.AddForce(GravityDirection.normalized * -(playerData.gravity), ForceMode.Acceleration);
-        }
-
-        print("OnWall");
-        
-        if (!OnWall)
-        {
-            forwardWallVector = Vector3.ProjectOnPlane(forwardVector, WallNormal).normalized * currentSpeed;
-        }
-        
-        Debug.DrawRay(cachedtransform.position,forwardWallVector);
-        
-        rigidbody.AddForce(-WallNormal, ForceMode.Force);
-        rigidbody.AddForce(forwardWallVector + counterMovement(rigidbody.velocity), ForceMode.Force);
-        
-        if (jumpInput)
-        {
-            Vector3 wallJump = (WallNormal * playerData.WallJumpStrength) - (GravityDirection * playerData.jumpStrength);//+ ( * -playerData.jumpStrength);
-            rigidbody.AddForce(wallJump, ForceMode.Impulse);
-            EndWallRun();
-        }
-    }*/
+        //isGrounded = CheckGrounded();
+    }
 }

@@ -41,7 +41,7 @@ GameObject:
   - component: {fileID: 5106789057514998946}
   - component: {fileID: 7192309823013313206}
   - component: {fileID: 2299492540626126881}
-  m_Layer: 7
+  m_Layer: 0
   m_Name: GameObject
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -73,8 +73,8 @@ BoxCollider:
   m_IsTrigger: 1
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 1, y: 2, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Size: {x: 1, y: 5, z: 1}
+  m_Center: {x: 0, y: 2, z: 0}
 --- !u!114 &2299492540626126881
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -88,7 +88,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   middlePoint: {fileID: 2681583874931622149}
+  playerTrans: {fileID: 0}
   playerMovement: {fileID: 0}
+  Player: {fileID: 0}
   dir: {x: 0, y: 0, z: 0}
   lastDir: {x: 0, y: 0, z: 0}
   lastPos: {x: 0, y: 0, z: 0}
@@ -109,7 +111,7 @@ GameObject:
   - component: {fileID: 1215543030095269668}
   - component: {fileID: 2354036941484835305}
   - component: {fileID: 1657717685310707954}
-  m_Layer: 7
+  m_Layer: 0
   m_Name: GameObject
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -141,8 +143,8 @@ BoxCollider:
   m_IsTrigger: 1
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 1, y: 2, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Size: {x: 1, y: 5, z: 1}
+  m_Center: {x: 0, y: 2, z: 0}
 --- !u!114 &1657717685310707954
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -156,7 +158,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   middlePoint: {fileID: 2681583874931622149}
+  playerTrans: {fileID: 0}
   playerMovement: {fileID: 0}
+  Player: {fileID: 0}
   dir: {x: 0, y: 0, z: 0}
   lastDir: {x: 0, y: 0, z: 0}
   lastPos: {x: 0, y: 0, z: 0}
@@ -177,7 +181,7 @@ GameObject:
   - component: {fileID: 4293221864060157259}
   - component: {fileID: 7836258561415085815}
   - component: {fileID: 4159625591852786066}
-  m_Layer: 7
+  m_Layer: 0
   m_Name: GameObject
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -209,8 +213,8 @@ BoxCollider:
   m_IsTrigger: 1
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 1, y: 2, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Size: {x: 1, y: 5, z: 1}
+  m_Center: {x: 0, y: 2, z: 0}
 --- !u!114 &4159625591852786066
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -224,7 +228,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   middlePoint: {fileID: 2681583874931622149}
+  playerTrans: {fileID: 0}
   playerMovement: {fileID: 0}
+  Player: {fileID: 0}
   dir: {x: 0, y: 0, z: 0}
   lastDir: {x: 0, y: 0, z: 0}
   lastPos: {x: 0, y: 0, z: 0}
@@ -245,7 +251,7 @@ GameObject:
   - component: {fileID: 1472580411656919974}
   - component: {fileID: 6932004792967631510}
   - component: {fileID: 4164385132242675308}
-  m_Layer: 7
+  m_Layer: 0
   m_Name: GameObject
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -277,8 +283,8 @@ BoxCollider:
   m_IsTrigger: 1
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 1, y: 2, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Size: {x: 1, y: 5, z: 1}
+  m_Center: {x: 0, y: 2, z: 0}
 --- !u!114 &4164385132242675308
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -292,7 +298,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   middlePoint: {fileID: 2681583874931622149}
+  playerTrans: {fileID: 0}
   playerMovement: {fileID: 0}
+  Player: {fileID: 0}
   dir: {x: 0, y: 0, z: 0}
   lastDir: {x: 0, y: 0, z: 0}
   lastPos: {x: 0, y: 0, z: 0}

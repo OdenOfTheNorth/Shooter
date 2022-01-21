@@ -12,19 +12,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2fc50b56204cb044d873016b54e00dad, type: 3}
   m_Name: Rifle
   m_EditorClassIdentifier: 
-  Mesh: {fileID: 4300000, guid: c52425aa7c1a7b849a483f7cc99974de, type: 3}
-  Damage: 3
+  audioClip: {fileID: 0}
+  mesh: {fileID: 2297625928308222646, guid: 5853a7083968d0142b7327bc05abfa97, type: 3}
+  UseProjectile: 0
+  projectile: {fileID: 0}
+  projectileForce: 0
+  Damage: 2
   timeBetweenShooting: 0.5
   spread: 0
   range: 100
   reloadTime: 1
   timeBetweenShots: 0.08
   EquipeSpeed: 3
+  KnockBack: 10
   magazineSize: 30
   bulletsPerTap: 3
-  bulletsLeft: 30
-  bulletsShot: 0
-  allowButtonHold: 0
+  bulletsLeft: 16
+  bulletsShot: -3
+  allowButtonHold: 1
   shooting: 0
   readyToShoot: 1
   reloading: 0

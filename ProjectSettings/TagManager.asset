@@ -5,6 +5,9 @@ TagManager:
   serializedVersion: 2
   tags:
   - Wall
+  - Enemy
+  - Damageable
+  - PickUp
   layers:
   - Default
   - TransparentFX
@@ -17,7 +20,7 @@ TagManager:
   - Projectile
   - Enemy
   - Grappleable
-  - 
+  - Player
   - 
   - 
   - 

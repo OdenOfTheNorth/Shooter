@@ -11,14 +11,13 @@ public class JumpPad : MonoBehaviour
     private void OnTriggerEnter(Collider other)
     {
         Rigidbody body = other.gameObject.GetComponent<Rigidbody>();
-
-        Vector3 up = other.gameObject.transform.up;//cachedtransform.forward;
-        Vector3 antiGravity = Vector3.Dot(body.velocity,up) * up;
         
         if (body)
         {
-            //body.velocity = 
-            body.AddForce(-antiGravity + jumpDir * jumpForce, ForceMode.Impulse);
+            Vector3 up = other.gameObject.transform.up;
+            Vector3 antiGravity = Vector3.Dot(body.velocity,up) * up;
+            body.velocity -= antiGravity;
+            body.AddForce(jumpDir * jumpForce, ForceMode.Impulse);
         }
     }
 }

@@ -5,6 +5,7 @@ public class Node : IHeapItem<Node> {
 	
     public bool walkable;
     public Vector3 worldPosition;
+    public Vector2 Direction;
     public int gridX;
     public int gridY;
 
@@ -13,11 +14,38 @@ public class Node : IHeapItem<Node> {
     public Node parent;
     int heapIndex;
 	
-    public Node(bool _walkable, Vector3 _worldPos, int _gridX, int _gridY) {
+    public int ObstacleCost;
+    public int gridIndex;
+    
+    //public Node(bool _walkable, Vector3 _worldPos, int _gridX, int _gridY) {
+    //    walkable = _walkable;
+    //    worldPosition = _worldPos;
+    //    gridX = _gridX;
+    //    gridY = _gridY;
+    //    ObstacleCost = _ObstacleCost;
+    //    gridIndex = index;
+    //}
+    
+    public Node(bool _walkable, Vector3 _worldPos, int _gridX, int _gridY, int _ObstacleCost, int index)
+    {                                                                                                        
+        walkable = _walkable;                                                                                
+        worldPosition = _worldPos;                                                                           
+        gridX = _gridX;                                                                                      
+        gridY = _gridY;                                                                                      
+        ObstacleCost = _ObstacleCost;                                                                        
+        //fCost = gCost + hCost;                                                                             
+        gridIndex = index;                                                                                   
+    }                                                                                                        
+    
+    public void init(bool _walkable, Vector3 _worldPos, int _gridX, int _gridY, int _ObstacleCost, int index)
+    {
         walkable = _walkable;
         worldPosition = _worldPos;
         gridX = _gridX;
         gridY = _gridY;
+        ObstacleCost = _ObstacleCost;
+        //fCost = gCost + hCost;
+        gridIndex = index;
     }
 
     public int fCost {

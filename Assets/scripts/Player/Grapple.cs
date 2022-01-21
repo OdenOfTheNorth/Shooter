@@ -1,3 +1,5 @@
+using System;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -13,6 +15,7 @@ public class Grapple : Ability
     
     private Rigidbody rigidbody;
     private SpringJoint joint;
+    private ConfigurableJoint rigidBodyJoint;
     private RaycastHit hit; 
     
     private Vector3 grapplePoint;
@@ -40,13 +43,20 @@ public class Grapple : Ability
     {
         if (Physics.Raycast(camera.position, camera.forward, out hit, maxDistance, grappleble))
         {
-            image.color = Color.green;      //canGrappleColor
+            print(hit.transform.name);
             canGrappeling = true;
+            if (image)
+            {
+                image.color = Color.green;      //canGrappleColor
+            }
         }
         else
         {
             canGrappeling = false;
-            image.color = Color.red;   //canNotGrappleColor
+            if (image)
+            {
+                image.color = Color.red;      //canGrappleColor
+            }
         }
     }
 
@@ -58,7 +68,7 @@ public class Grapple : Ability
         {
             if (canGrappeling)
             {
-                StartGrapple(hit);
+                StartGrapple();
             }
         }
         else if (abilityInput && isGrappeling)
@@ -68,7 +78,11 @@ public class Grapple : Ability
 
         if (isGrappeling)
         {
-            rigidbody.AddForce(Camera.main.transform.forward * pullForce, ForceMode.Acceleration);
+            if (Input.GetKeyDown(cancel))
+            {
+                EndGrapple();
+            }
+            rigidbody.AddForce((grapplePoint - transform.position).normalized * pullForce, ForceMode.Acceleration);
         }
     }
 
@@ -77,32 +91,57 @@ public class Grapple : Ability
         DrawRope();
     }
 
-    void StartGrapple(RaycastHit hit)
+    void StartGrapple()//RaycastHit hit
     {
-        print("start Grapple");
-        isGrappeling = true;
-        // add SpringJoint
-        grapplePoint = hit.point;
-        joint = player.gameObject.AddComponent<SpringJoint>();
-        joint.autoConfigureConnectedAnchor = false;
-        joint.connectedAnchor = grapplePoint;
-        // Distances
-        float distance = Vector3.Distance(player.position, grapplePoint);
-        joint.maxDistance = distance * 0.8f;
-        joint.minDistance = distance * 0.2f;
 
-        joint.spring = spring;
-        joint.damper = damper;
-        joint.massScale = massScale;
+        RaycastHit outHit;
+        
+        if (Physics.Raycast(camera.position, camera.forward,out outHit, maxDistance, grappleble))
+        {
+            print("start Grapple");
+            isGrappeling = true;
+            // add SpringJoint
 
-        lr.positionCount = 2;
+            joint = player.gameObject.AddComponent<SpringJoint>();
+            joint.autoConfigureConnectedAnchor = false;
+        
+            grapplePoint = outHit.point;
+            joint.connectedAnchor = grapplePoint;
+
+            PlayerMovement playerMovement = GetComponent<PlayerMovement>();
+            playerMovement.ShouldIncreaseGravity = false;
+            playerMovement.isGrappeling = true;
+            
+            //playerMovement.ResetDownwardsVel();
+        
+            // Distances
+            float distance = Vector3.Distance(player.position, grapplePoint);
+            joint.maxDistance = distance * 0.8f;
+            joint.minDistance = distance * 0.2f;
+
+            joint.spring = spring;
+            joint.damper = damper;
+            joint.massScale = massScale;
+
+            lr.positionCount = 2;
+        }
+        
+
+
     }
     void EndGrapple()
     {
         Destroy(joint);
+        Destroy(rigidBodyJoint);
         print("end Grapple");
         isGrappeling = false;
         lr.positionCount = 0;
+
+        PlayerMovement playerMovement = GetComponent<PlayerMovement>();
+        playerMovement.isGrappeling = false;
+        playerMovement.ShouldIncreaseGravity = true;
+        playerMovement.currentGravityStrength = playerMovement.playerData.gravity;
+        //playerMovement.ResetDownwardsVel();
     }
 
     void DrawRope()
@@ -111,9 +150,19 @@ public class Grapple : Ability
         {
             return;
         }
-        
         lr.SetPosition(0,gun.position);
         lr.SetPosition(1,grapplePoint);
+    }
+
+    private void OnDrawGizmos()
+    {
+        if (!isGrappeling)
+        {
+            return;
+        }
+        
+        Gizmos.DrawWireSphere(gun.position, 1.2f);
+        Gizmos.DrawWireSphere(joint.anchor, 1.2f);
     }
 
     public Vector3 GetGrapplePoint()

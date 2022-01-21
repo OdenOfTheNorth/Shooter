@@ -12,15 +12,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 33ef0e0720aeaca438d9c75d26f3b91e, type: 3}
   m_Name: Player
   m_EditorClassIdentifier: 
-  MaxJumpCount: 2
-  WalkSpeed: 150
-  RunSpeed: 200
+  MaxJumpCount: 1
+  WalkSpeed: 15
+  RunSpeed: 20
   gravity: 10
-  jumpStrength: 7
-  WallJumpStrength: 10
+  GravityIncrease: 100
+  MaxGravity: 90
+  jumpStrength: 25
+  WallJumpDirStrength: 15
+  WallJumpUpStrength: 10
   AirControll: 0.15
-  MaxCounterForce: 0
-  MinCounterForce: 0
+  coyoteTime: 5
+  MaxSpeed: 15
   GroundCounterForce: 10
   SlideCounterForce: 7
   AirCounterForce: 3

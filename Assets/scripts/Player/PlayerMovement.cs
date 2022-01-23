@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 [RequireComponent(typeof(PlayerInput), typeof(Rigidbody) )]
 public class PlayerMovement : MonoBehaviour
@@ -85,7 +86,7 @@ public class PlayerMovement : MonoBehaviour
     [HideInInspector] public Transform playerCam;
     [HideInInspector] public Rigidbody rigidbody;
     public CapsuleCollider _capsuleCollider;
-    public bool DebugGizmos = false;
+    public bool debug = false;
     
     private void Awake()
     {
@@ -113,35 +114,40 @@ public class PlayerMovement : MonoBehaviour
 
     private void CalculateMovement()
     {
-        //Move Direction
+        //Calculate Directions based on camera
         gravityUp = -GravityDirection.normalized;
         cameraForward = Vector3.Cross(gravityUp,playerCam.right);
         rightVector = Vector3.Cross(gravityUp, cameraForward);
         forwardVector = Vector3.Cross(gravityUp, rightVector);
         
+        //Set moveDirection based on vector and input
         moveDirection = (rightVector * -rightInput + forwardVector * forwardInput).normalized;
     }
 
 
-
+    
     private void Movement()
     {
-        //Gravity
+        // Add Gravity
         if (ShouldApplyGravity)
         {
             if (!isGrounded)
             {
+                
                 if (ShouldIncreaseGravity)
                 {
+                    // Increase gravity overtime in air to counter act the Rigidbody Drag
                     currentGravityStrength += Time.deltaTime * playerData.GravityIncrease;
-
+                    // Clamp the gravity so the player cant fall faster
                     currentGravityStrength =
                         Mathf.Clamp(currentGravityStrength, playerData.gravity, playerData.MaxGravity);
                 }
                 else
                 {
+                    // Reset To normal gravity
                     currentGravityStrength = playerData.gravity;
                 }
+                
                 rigidbody.AddForce(GravityDirection.normalized * currentGravityStrength, ForceMode.Force);    
             }
             else
@@ -153,25 +159,26 @@ public class PlayerMovement : MonoBehaviour
         //Move
         if (!isSliding)
         {
-            if (isGrounded && !CheckSlope())
+            if (isGrounded && !CheckSlope())    
             {
                 moveDirection = (moveDirection.normalized * currentSpeed * movementMultiplier);
             }
-            else if (isGrounded && CheckSlope())
+            else if (isGrounded && CheckSlope()) // if on slope change the movement direction to match the slope 
             {
                 SlopeMovement = Vector3.ProjectOnPlane(moveDirection, slopeHit.normal);
                 moveDirection = (SlopeMovement.normalized * currentSpeed * movementMultiplier);
             }
-            else if (!isGrounded && !OnWall)
+            else if (!isGrounded && !OnWall)    // if not on Ground and Wall change to air control
             {
                 moveDirection = moveDirection.normalized * currentSpeed * movementMultiplier * playerData.AirControll;
             }        
-            else if (!isGrounded && OnWall)
+            else if (!isGrounded && OnWall)     // move in wall direction
             {
                 moveDirection = (moveDirection.normalized * currentSpeed * movementMultiplier);
             }
         }
 
+        // Add force in movement direction
         rigidbody.AddForce(moveDirection);
 
         Magnetude = rigidbody.velocity.magnitude;
@@ -179,6 +186,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void Update()
     {
+        //return if player Data is null
         if (playerData == null)
         {
             print("playerData is null");
@@ -190,33 +198,15 @@ public class PlayerMovement : MonoBehaviour
             return;
         }
         
+        // Check The player sourounding
         isGrounded = CheckGrounded();
         OnSlope = CheckSlope();
         OnWall = CheckWall();
-
+        
         CalculateMovement();
         SetCurrentSpeed();
         RigidBodyDrag();
-
-        if (CanWallRun())
-        {
-            if (wallLeft)
-            {
-                StartWallRun();
-            }
-            else if (wallRight)
-            {
-                StartWallRun();
-            }
-            else
-            {
-                EndWallRun(Vector3.zero);
-            }
-        }
-        else
-        {
-            EndWallRun(Vector3.zero);
-        }
+        WallLogic();
         
         Jump();
     }
@@ -242,8 +232,6 @@ public class PlayerMovement : MonoBehaviour
         orientation.localScale = crouchScale;
 
         Vector3 NewPos = orientation.position + (GravityDirection.normalized * 0.5f);
-
-        //isCrouching = true;
         
         orientation.position = NewPos;// new Vector3(transform.position.x, transform.position.y - 0.5f, transform.position.z);
     
@@ -269,6 +257,7 @@ public class PlayerMovement : MonoBehaviour
 
     void RigidBodyDrag()
     {
+        //Change the rigidBody drag depending on what the situation the player is in
         if (isGrounded && !isSliding)
         {
             rigidbody.drag = groundDrag;
@@ -292,6 +281,7 @@ public class PlayerMovement : MonoBehaviour
     {
         if (OnWall)
         {
+            //if on wall the player dose not use this function
             return;
         }
         
@@ -301,11 +291,15 @@ public class PlayerMovement : MonoBehaviour
             
             if (!isGrounded)
             {
+                // if already in air increase the current jump count
                 CurrnetJumpCount++;
+                // reset downwards velocity so the players jump is consistance and not depending on the down velocity
                 ResetDownwardsVel();
+                // add an Impulse in the direction the player is moving in to get a smal boost in the air
                 rigidbody.AddForce(moveDirection * currentSpeed, ForceMode.Impulse);  
             }
 
+            // add an Impulse in the up direction
             Vector3 jumpStrength = GravityDirection.normalized * -playerData.jumpStrength;
             rigidbody.AddForce(jumpStrength, ForceMode.Impulse);    
         }
@@ -321,7 +315,7 @@ public class PlayerMovement : MonoBehaviour
     
     private void OnDrawGizmos()
     {
-        if (DebugGizmos)
+        if (debug)
         {
             Vector3 pos = orientation.position + (GravityDirection.normalized * (_capsuleCollider.height / 2));
             Gizmos.DrawWireSphere(pos, sphereRadius);   
@@ -332,21 +326,22 @@ public class PlayerMovement : MonoBehaviour
     {
         if (jumping)
         {
+            // Reset jump on landed
             jumping = false;
         }
-        
+        // Reset Currnet Jump Count on landed
         CurrnetJumpCount = 0;
         currentCounterForce = playerData.GroundCounterForce;
+        // Reset current Gravity Strength on landed
         currentGravityStrength = playerData.gravity;
     }
 
     private bool CheckGrounded()
     {
-        //Vector3 pos = orientation.position + (GravityDirection.normalized * (_capsuleCollider.height / 2));
-
+        // use a sphere to check if the player is on ground
         bool ground = Physics.CheckSphere(GroundCheck.position, sphereRadius, GroundLayer);
         
-        if (ground)//
+        if (ground)
         {
             if (!isGrounded)
             {
@@ -370,13 +365,13 @@ public class PlayerMovement : MonoBehaviour
     {
         Vector3 pos = orientation.position;
        
-        if (DebugGizmos)
+        if (debug)
         {
             Debug.DrawRay(pos + (GravityDirection.normalized * _capsuleCollider.height / 2), GravityDirection.normalized, Color.blue);
         }
 
         RaycastHit slope;
-        Physics.Raycast(pos + _capsuleCollider.center, GravityDirection, out slope,_capsuleCollider.height + maxDistance,GroundLayer);//layerMask
+        Physics.Raycast(pos + _capsuleCollider.center, GravityDirection, out slope,_capsuleCollider.height + maxDistance,GroundLayer);
 
         if (slope.collider == null)
         {
@@ -392,7 +387,7 @@ public class PlayerMovement : MonoBehaviour
 
         if (slopeAngle < 180)
         {
-            if (DebugGizmos)
+            if (debug)
             {
                 Debug.DrawLine(slope.point ,slope.point + slope.normal, Color.green);
             }
@@ -424,21 +419,19 @@ public class PlayerMovement : MonoBehaviour
             (-right + forward).normalized,
             (-right - forward).normalized
         };
-
-        //RaycastHit[] hit = new RaycastHit[directions.Length]; 
         
         for (int i = 0; i < directions.Length; i++)
         {
             Physics.Raycast(pos, directions[i], out WallHit, maxWallDistance, WallLayer);
 
-            if (DebugGizmos)
+            if (debug)
             {
                 Debug.DrawRay(pos, directions[i] * maxWallDistance, Color.red);
             }
 
             if (WallHit.collider != null)
             {
-                if (DebugGizmos)
+                if (debug)
                 {
                     Debug.DrawRay(WallHit.point, WallHit.normal * maxWallDistance, Color.green);    
                 }
@@ -455,8 +448,7 @@ public class PlayerMovement : MonoBehaviour
                     wallRight = true; 
                     rightWallHit = WallHit;
                 }
-
-                //StartWallRun();
+                
                 return true;
             }
             else
@@ -476,6 +468,29 @@ public class PlayerMovement : MonoBehaviour
         return false;
     }
 
+    private void WallLogic()
+    {
+        if (CanWallRun())
+        {
+            if (wallLeft)
+            {
+                StartWallRun();
+            }
+            else if (wallRight)
+            {
+                StartWallRun();
+            }
+            else
+            {
+                EndWallRun(Vector3.zero);
+            }
+        }
+        else
+        {
+            EndWallRun(Vector3.zero);
+        }
+    }
+
     private bool CanWallRun()
     {
         if (!isGrounded)
@@ -486,28 +501,28 @@ public class PlayerMovement : MonoBehaviour
         if ((forwardInput == 0 && rightInput == 0))
         {
             EndWallRun(Vector3.zero);
-            //print("no input");
             return false;
         }
 
         return true;
     }
     
-    public void StartWallRun()//RaycastHit hit
+    public void StartWallRun()
     {
         ShouldApplyGravity = false;
         
         rigidbody.AddForce(GravityDirection.normalized, ForceMode.Force);
 
         float dotAngle = Vector3.Dot(forwardVector, WallHit.normal);
-        //print(dotAngle);
         
         if (dotAngle < maxAngle && dotAngle > minAngle)
         {
             Vector3 forward = Vector3.ProjectOnPlane(orientation.forward, WallHit.normal);
 
+            // moveDirection is now the forward direction of the camera relativ to the wall
             moveDirection = forward.normalized;
         
+            // Check if jump input is pressed because when on wall jump input is ignored in jump
             if (jumpInput)
             {
                 print("Jump");
@@ -515,6 +530,7 @@ public class PlayerMovement : MonoBehaviour
                 if (wallLeft)
                 {
                     print("Jump wallLeft");
+                    // calculate wall jump direction 
                     Vector3 wallRunJumpDirection = 
                         (orientation.up * playerData.WallJumpUpStrength) + 
                         (leftWallHit.normal * playerData.WallJumpDirStrength) +
@@ -525,6 +541,7 @@ public class PlayerMovement : MonoBehaviour
                 if (wallRight)
                 {
                     print("Jump wallRight");
+                    // calculate wall jump direction 
                     Vector3 wallRunJumpDirection = 
                         (orientation.up * playerData.WallJumpUpStrength) + 
                         (rightWallHit.normal * playerData.WallJumpDirStrength) +
@@ -546,6 +563,7 @@ public class PlayerMovement : MonoBehaviour
     
     void SetCurrentSpeed()
     {
+        //SetCurrent Speed based On inputs
         if (runInput && isGrounded)
         {
             currentSpeed = Mathf.Lerp(currentSpeed, playerData.RunSpeed, acceliration * Time.deltaTime);

@@ -13,7 +13,6 @@ public class PlayerMovement : MonoBehaviour
     public bool jumpInput;
 
     [Header("States")] 
-    public bool AllowInput = true;
     public bool OnWall = false;
     public bool isGrounded = false;
     public bool OnSlope = false;
@@ -123,13 +122,7 @@ public class PlayerMovement : MonoBehaviour
         moveDirection = (rightVector * -rightInput + forwardVector * forwardInput).normalized;
     }
 
-    public void ResetDownwardsVel()
-    {
-        Vector3 up = orientation.up;
-        Vector3 counterUpVelocity = Vector3.Dot(rigidbody.velocity,up) * up;
-        rigidbody.velocity -= counterUpVelocity;
-        currentGravityStrength = playerData.gravity;
-    }
+
 
     private void Movement()
     {
@@ -181,7 +174,7 @@ public class PlayerMovement : MonoBehaviour
 
         rigidbody.AddForce(moveDirection);
 
-        //Magnetude = rigidbody.velocity.magnitude;
+        Magnetude = rigidbody.velocity.magnitude;
     }
 
     private void Update()
@@ -189,7 +182,6 @@ public class PlayerMovement : MonoBehaviour
         if (playerData == null)
         {
             print("playerData is null");
-            //Debug.Break();
             return;
         }
         
@@ -201,8 +193,7 @@ public class PlayerMovement : MonoBehaviour
         isGrounded = CheckGrounded();
         OnSlope = CheckSlope();
         OnWall = CheckWall();
-        
-        WaltWall();
+
         CalculateMovement();
         SetCurrentSpeed();
         RigidBodyDrag();
@@ -228,8 +219,6 @@ public class PlayerMovement : MonoBehaviour
         }
         
         Jump();
-
-        string currentSpeed = "CurrentSpeed\n" + Magnetude;
     }
     
     private void FixedUpdate()
@@ -237,7 +226,6 @@ public class PlayerMovement : MonoBehaviour
         if (playerData == null)
         {
             print("playerData is null");
-            //Debug.Break();
             return;
         }
         
@@ -249,25 +237,6 @@ public class PlayerMovement : MonoBehaviour
         return (isGrounded || OnSlope);
     }
 
-    void WaltWall()
-    {
-        RaycastHit hit;
-
-        Vector3 cheackPos = orientation.position + orientation.forward * ((_capsuleCollider.radius) + 0.1f);
-        float maxWaltDistance = _capsuleCollider.height * 0.5f;
-        
-        Debug.DrawLine(cheackPos, cheackPos + orientation.up * -maxWaltDistance, Color.green);
-        Physics.Raycast(cheackPos, -orientation.up, out hit, maxWaltDistance, GroundLayer);
-
-        if (hit.collider != null)
-        {
-            float trueDistance = (maxWaltDistance - hit.distance);
-            //rigidbody.AddForce(GravityDirection * -trueDistance, ForceMode.Acceleration);
-            Debug.DrawLine(hit.point,hit.point + GravityDirection * trueDistance, Color.red);
-            //Debug.Break();
-        }
-    }
-    
     public void StartCrouch() 
     {
         orientation.localScale = crouchScale;
@@ -280,14 +249,12 @@ public class PlayerMovement : MonoBehaviour
     
         if (rigidbody.velocity.sqrMagnitude < (VelocityThreshold * VelocityThreshold) && isCrouching)
         {
-            //AllowInput = false;
             isCrouching = false;
             isSliding = true;
             rigidbody.AddForce(orientation.forward * slideForce, ForceMode.Impulse);
         }
         else
         {
-            //AllowInput = true;
             isCrouching = true;
             isSliding = false;
         }
@@ -306,10 +273,6 @@ public class PlayerMovement : MonoBehaviour
         {
             rigidbody.drag = groundDrag;
         }
-        else if (isGrounded && isSliding)
-        {
-            //rigidbody.drag = slideDrag;
-        }
         else if (!isGrounded && !isGrappeling)
         {
             rigidbody.drag = airDrag;
@@ -320,6 +283,11 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
+    bool CanJump()
+    {
+        return (isGrounded || CurrnetJumpCount < playerData.MaxJumpCount || OnSlope) && jumpInput;
+    }
+    
     public void Jump()
     {
         if (OnWall)
@@ -330,14 +298,11 @@ public class PlayerMovement : MonoBehaviour
         if (CanJump())
         {
             jumping = true;
-
-            bool coyoteTimeNotOver = (lastFallTime - Time.deltaTime > playerData.coyoteTime);
             
             if (!isGrounded)
             {
                 CurrnetJumpCount++;
                 ResetDownwardsVel();
-                //moveDirection = (moveDirection.normalized * currentSpeed * movementMultiplier);
                 rigidbody.AddForce(moveDirection * currentSpeed, ForceMode.Impulse);  
             }
 
@@ -345,42 +310,13 @@ public class PlayerMovement : MonoBehaviour
             rigidbody.AddForce(jumpStrength, ForceMode.Impulse);    
         }
     }
-
-
     
-    public Vector3 CounterMovement(Vector3 Vel)
+    public void ResetDownwardsVel()
     {
-        if (!isGrounded || jumping)
-        {
-            return Vector3.zero;
-        }
-
-        Vector3 right = Vector3.ProjectOnPlane(rightVector, GravityDirection);
-        Vector3 forward = Vector3.ProjectOnPlane(forwardVector, GravityDirection);
-        Vector3 counterForwardVelocity = (Vector3.Dot(Vel,right) * right);
-        Vector3 counterRightVelocity = (Vector3.Dot(Vel,forward) * forward);
-        Vector3 counterVelocity = counterForwardVelocity + counterRightVelocity;
-
-        return counterVelocity * -currentCounterForce;
-    }
-    
-    public Vector2 GetVelWithoutGravityDirection(Vector3 Vel)
-    {
-        float x = 0;
-        float y = 0;
-        
-        Vector3 up = -GravityDirection;
-        Vector3 right = orientation.right;
-        Vector3 forward = orientation.forward;
-        
-        Vector3 counterUpForce = Vector3.Dot(Vel,up) * up;
-        Vector3 counterForwardVelocity = Vector3.Dot(Vel,right) * right;
-        Vector3 counterRightVelocity = Vector3.Dot(Vel,forward) * forward;
-        
-        x = Mathf.Abs((Vel - counterUpForce - counterRightVelocity).magnitude);
-        y = Mathf.Abs((Vel - counterUpForce - counterForwardVelocity).magnitude);
-        //print("counterForwardVelocity.magnitude" + counterForwardVelocity.magnitude + "forwardMagnetude = " + y + "counterRightVelocity.magnitude" + counterRightVelocity.magnitude + "rightMagnetude = " + x);
-        return new Vector2(x, y);
+        Vector3 up = orientation.up;
+        Vector3 counterUpVelocity = Vector3.Dot(rigidbody.velocity,up) * up;
+        rigidbody.velocity -= counterUpVelocity;
+        currentGravityStrength = playerData.gravity;
     }
     
     private void OnDrawGizmos()
@@ -394,7 +330,11 @@ public class PlayerMovement : MonoBehaviour
 
     public void Landed()
     {
-        jumping = false;
+        if (jumping)
+        {
+            jumping = false;
+        }
+        
         CurrnetJumpCount = 0;
         currentCounterForce = playerData.GroundCounterForce;
         currentGravityStrength = playerData.gravity;
@@ -467,26 +407,6 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-
-    
-
-    void SetCurrentSpeed()
-    {
-        if (runInput && isGrounded)
-        {
-            currentSpeed = Mathf.Lerp(currentSpeed, playerData.RunSpeed, acceliration * Time.deltaTime);
-        }
-        else
-        {
-            currentSpeed = Mathf.Lerp(currentSpeed, playerData.WalkSpeed, acceliration * Time.deltaTime);
-        }
-    }
-
-    bool CanJump()
-    {
-        return (isGrounded || CurrnetJumpCount < playerData.MaxJumpCount || OnSlope) && jumpInput;
-    }
-    
     private bool CheckWall()
     {
         Vector3 pos = orientation.position;
@@ -623,18 +543,16 @@ public class PlayerMovement : MonoBehaviour
         ShouldApplyGravity = true;
         OnWall = false;
     }
-
-    private void OnCollisionStay(Collision other)
+    
+    void SetCurrentSpeed()
     {
-        //isGrounded = CheckGrounded();
-    }
-    private void OnCollisionExit(Collision other)
-    {
-        //isGrounded = CheckGrounded();
-    }
-
-    private void OnCollisionEnter(Collision other)
-    {
-        //isGrounded = CheckGrounded();
+        if (runInput && isGrounded)
+        {
+            currentSpeed = Mathf.Lerp(currentSpeed, playerData.RunSpeed, acceliration * Time.deltaTime);
+        }
+        else
+        {
+            currentSpeed = Mathf.Lerp(currentSpeed, playerData.WalkSpeed, acceliration * Time.deltaTime);
+        }
     }
 }

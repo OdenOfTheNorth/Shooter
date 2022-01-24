@@ -22,9 +22,10 @@ MonoBehaviour:
   WallJumpDirStrength: 15
   WallJumpUpStrength: 10
   AirControll: 0.15
-  coyoteTime: 5
-  MaxSpeed: 15
-  GroundCounterForce: 10
-  SlideCounterForce: 7
-  AirCounterForce: 3
+  coyoteTime: 0.5
+  groundDrag: 6
+  airDrag: 2
+  grappelDrag: 0
+  slideDrag: 0.2
+  runAcceliration: 10
   RotationSpeed: 10

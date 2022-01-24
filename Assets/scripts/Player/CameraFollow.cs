@@ -33,49 +33,47 @@ public class CameraFollow : MonoBehaviour
         cameraTransform.transform.rotation = targetRotation;
         MouseY = 0;
     }
-
     public void Update()
     {
-        deltaSensetivity = MouseSensetivity * Time.deltaTime;
+        cameraTransform.position = _transform.position;
+    }
+
+    public void FixedUpdate()
+    {
+        deltaSensetivity = MouseSensetivity * Time.fixedDeltaTime;
         
         RotationY -= MouseY * deltaSensetivity;
         RotationY = Mathf.Clamp(RotationY, -90, 90);
         
-        cameraTransform.position = _transform.position;
         cameraTransform.rotation = _transform.rotation;
         
         Player.transform.Rotate(Vector3.up,MouseX * deltaSensetivity);
 
         RotateCamera();
-        /*
-        if (movement.OnWall)
-        {
-            Quaternion angle = Quaternion.Euler(RotationY, 0, currentRunAngle);
-            angle = Quaternion.Lerp(Quaternion.identity, angle, rotationSpeed * Time.deltaTime);//Time.fixedDeltaTime * rotationSpeed
-            _transform.localRotation = angle;
-        }else { }
-        */
+
         _transform.localRotation = Quaternion.Euler(RotationY,0,currentRunAngle);
     }
 
     public void RotateCamera()
     {
+        float fixedTime = Time.fixedDeltaTime;
+        
         if (movement.wallRight)
         {
-            currentRunAngle = Mathf.Lerp(currentRunAngle, wallRunAngle, rotationSpeed * Time.deltaTime);
+            currentRunAngle = Mathf.Lerp(currentRunAngle, wallRunAngle, rotationSpeed * fixedTime);
         }
         else if (movement.wallLeft)
         {
-            currentRunAngle = Mathf.Lerp(currentRunAngle, -wallRunAngle, rotationSpeed * Time.deltaTime);            
+            currentRunAngle = Mathf.Lerp(currentRunAngle, -wallRunAngle, rotationSpeed * fixedTime);            
         }
         else
         {
-            currentRunAngle = Mathf.Lerp(currentRunAngle, 0, rotationSpeed * Time.deltaTime);        
+            currentRunAngle = Mathf.Lerp(currentRunAngle, 0, rotationSpeed * fixedTime);        
         }
     }
-
+/*
     private void FixedUpdate()
-    {/*
+    {
         upVector = movement.GravityDirection;
         deltaSensetivity = MouseSensetivity * Time.fixedDeltaTime;
         
@@ -103,6 +101,6 @@ public class CameraFollow : MonoBehaviour
         //else
         {
             _transform.localRotation = Quaternion.Euler(RotationY,0,0);
-        }*/
-    }
+        }
+    }*/
 }

@@ -22,19 +22,19 @@ public class PlayerMovement : MonoBehaviour
     public bool isSliding = false;
     public bool ShouldApplyGravity = true;
     public bool ShouldIncreaseGravity = true;
+
     public bool jumping = false;
     public float slopeAngle;
+    
+    //
+    public bool canJump = false;
     
     [Header("Movement")]
     public int CurrnetJumpCount = 0;
     public float currentSpeed = 5f;
-    public float acceliration = 10f;
+
     private float movementMultiplier = 10;
-    [Header("Drag")]
-    public float groundDrag = 6f;
-    public float airDrag = 2f;
-    public float grappelDrag = 0f;
-    public float slideDrag = 0.2f;
+
     public float VelocityThreshold = 15f;
     public float Magnetude;
     
@@ -103,7 +103,6 @@ public class PlayerMovement : MonoBehaviour
         rigidbody.constraints = RigidbodyConstraints.FreezeRotation;
         
         currentSpeed = playerData.WalkSpeed;
-        currentCounterForce = playerData.GroundCounterForce;
     }
 
     private void RotationTowardsGravityDirection()
@@ -260,21 +259,21 @@ public class PlayerMovement : MonoBehaviour
         //Change the rigidBody drag depending on what the situation the player is in
         if (isGrounded && !isSliding)
         {
-            rigidbody.drag = groundDrag;
+            rigidbody.drag = playerData.groundDrag;
         }
         else if (!isGrounded && !isGrappeling)
         {
-            rigidbody.drag = airDrag;
+            rigidbody.drag = playerData.airDrag;
         }
         else
         {
-            rigidbody.drag = grappelDrag;
+            rigidbody.drag = playerData.grappelDrag;
         }
     }
 
     bool CanJump()
     {
-        return (isGrounded || CurrnetJumpCount < playerData.MaxJumpCount || OnSlope) && jumpInput;
+        return (OnSlope || isGrounded || CurrnetJumpCount < playerData.MaxJumpCount) && jumpInput;
     }
     
     public void Jump()
@@ -288,13 +287,15 @@ public class PlayerMovement : MonoBehaviour
         if (CanJump())
         {
             jumping = true;
+
+            // reset downwards velocity so the players jump is consistance and not depending on the down velocity
+            ResetDownwardsVel();
             
             if (!isGrounded)
             {
+                lastFallTime = playerData.coyoteTime;
                 // if already in air increase the current jump count
                 CurrnetJumpCount++;
-                // reset downwards velocity so the players jump is consistance and not depending on the down velocity
-                ResetDownwardsVel();
                 // add an Impulse in the direction the player is moving in to get a smal boost in the air
                 rigidbody.AddForce(moveDirection * currentSpeed, ForceMode.Impulse);  
             }
@@ -331,7 +332,7 @@ public class PlayerMovement : MonoBehaviour
         }
         // Reset Currnet Jump Count on landed
         CurrnetJumpCount = 0;
-        currentCounterForce = playerData.GroundCounterForce;
+        
         // Reset current Gravity Strength on landed
         currentGravityStrength = playerData.gravity;
     }
@@ -354,7 +355,6 @@ public class PlayerMovement : MonoBehaviour
         else
         {
             lastFallTime += Time.deltaTime;
-            currentCounterForce = playerData.AirCounterForce;
             return false;
         }
         
@@ -390,6 +390,11 @@ public class PlayerMovement : MonoBehaviour
             if (debug)
             {
                 Debug.DrawLine(slope.point ,slope.point + slope.normal, Color.green);
+            }
+
+            if (!jumping)
+            {
+                rigidbody.AddForce(slope.normal * -playerData.gravity);
             }
 
             slopeHit = slope;
@@ -566,11 +571,11 @@ public class PlayerMovement : MonoBehaviour
         //SetCurrent Speed based On inputs
         if (runInput && isGrounded)
         {
-            currentSpeed = Mathf.Lerp(currentSpeed, playerData.RunSpeed, acceliration * Time.deltaTime);
+            currentSpeed = Mathf.Lerp(currentSpeed, playerData.RunSpeed, playerData.runAcceliration * Time.deltaTime);
         }
         else
         {
-            currentSpeed = Mathf.Lerp(currentSpeed, playerData.WalkSpeed, acceliration * Time.deltaTime);
+            currentSpeed = Mathf.Lerp(currentSpeed, playerData.WalkSpeed, playerData.runAcceliration * Time.deltaTime);
         }
     }
 }

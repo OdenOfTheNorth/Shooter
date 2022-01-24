@@ -1703,7 +1703,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentTime: 0
   TimerText: {fileID: 0}
-  Level1Times: {fileID: 0}
   ListLevelTimes: []
 --- !u!1 &1565650532847174807
 GameObject:
@@ -6915,6 +6914,7 @@ GameObject:
   - component: {fileID: 1289301289677901440}
   - component: {fileID: 5110494960198475954}
   - component: {fileID: 5510490795657442671}
+  - component: {fileID: 4202255418225692120}
   m_Layer: 5
   m_Name: Text (TMP)
   m_TagString: Untagged
@@ -7040,6 +7040,20 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &4202255418225692120
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7079922187513753327}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a3a515d1a98424b4ab5a0fe1f2ea9c51, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  timeIndex: 2
+  TimerText: {fileID: 0}
 --- !u!1 &7131893515778975022
 GameObject:
   m_ObjectHideFlags: 0
@@ -7051,6 +7065,7 @@ GameObject:
   - component: {fileID: 8569364330955104659}
   - component: {fileID: 5743890089669114583}
   - component: {fileID: 3611858928168758950}
+  - component: {fileID: 6125982549224076357}
   m_Layer: 5
   m_Name: Time
   m_TagString: Untagged
@@ -7174,6 +7189,20 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &6125982549224076357
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7131893515778975022}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a3a515d1a98424b4ab5a0fe1f2ea9c51, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  timeIndex: 1
+  TimerText: {fileID: 0}
 --- !u!1 &7208732243257476312
 GameObject:
   m_ObjectHideFlags: 0
@@ -10137,7 +10166,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &3758896187304416637
 Transform:
   m_ObjectHideFlags: 0

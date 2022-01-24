@@ -8,7 +8,6 @@ public class GravityRamp : MonoBehaviour
     public Transform middlePoint;
     public Transform playerTrans;
     public PlayerMovement playerMovement;
-    public Player Player;
     public Vector3 dir;
     public Vector3 lastDir;
     public Vector3 lastPos;
@@ -39,7 +38,7 @@ public class GravityRamp : MonoBehaviour
 
     void Update()
     {
-        if (playerMovement || Player)
+        if (playerMovement)
         {
             Vector3 directionVector = Vector3.zero;
 
@@ -62,11 +61,6 @@ public class GravityRamp : MonoBehaviour
 
             gravityVector = counterDir - dir;
 
-            if (Player)
-            {
-                Player.GravityDirection = ReverseVector ? -gravityVector : gravityVector;    
-            }
-
             if (playerMovement)
             {
                 playerMovement.GravityDirection = ReverseVector ? -gravityVector : gravityVector;    
@@ -79,13 +73,6 @@ public class GravityRamp : MonoBehaviour
     private void OnTriggerStay(Collider other)
     {
         playerMovement = other.GetComponent<PlayerMovement>();
-        Player = other.GetComponent<Player>();
-        
-        if (Player)
-        {
-            playerTrans = other.transform;
-            lastDir = Player.GravityDirection;
-        }
         
         if (playerMovement)
         {
@@ -131,22 +118,11 @@ public class GravityRamp : MonoBehaviour
         {
             playerMovement = other.GetComponent<PlayerMovement>();    
         }
-
-        if (!Player)
-        {
-            Player = other.GetComponent<Player>();
-        }
         
         if (playerMovement)
         {
             playerMovement.GravityDirection = NewDir;
             playerMovement = null;
-        }
-        
-        if (Player)
-        {
-            Player.GravityDirection = NewDir;
-            Player = null;
         }
     }
     private void OnDrawGizmos()
@@ -160,11 +136,6 @@ public class GravityRamp : MonoBehaviour
         {
             Gizmos.color = Color.black;    
             Gizmos.DrawLine(middlePoint.position, playerMovement.orientation.position);
-        }
-        if (Player)
-        {
-            Gizmos.color = Color.black;    
-            Gizmos.DrawLine(middlePoint.position, Player.transform.position);
         }
 
         if (middlePoint)

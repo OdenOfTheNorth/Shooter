@@ -17,7 +17,7 @@ MonoBehaviour:
   UseProjectile: 0
   projectile: {fileID: 0}
   projectileForce: 0
-  Damage: 3
+  Damage: 6
   timeBetweenShooting: 1
   spread: 0.1
   range: 100
@@ -27,7 +27,7 @@ MonoBehaviour:
   KnockBack: 10
   magazineSize: 24
   bulletsPerTap: 6
-  bulletsLeft: 24
+  bulletsLeft: 12
   bulletsShot: 0
   allowButtonHold: 0
   shooting: 0
